@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { ArrowRight } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
+import { GithubIcon } from "../icons"
 
 export function CtaSection() {
     const sectionRef = useRef<HTMLDivElement>(null)
@@ -44,8 +45,11 @@ export function CtaSection() {
                             Get Started Now
                             <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                         </Button>
-                        <Button variant="outline" size="lg" className="w-full sm:w-auto">
-                            Schedule a Demo
+                        <Button variant="outline" size="lg" className="w-full sm:w-auto" onClick={() => {
+                            window.open("https://github.com/404bidden", "_blank")
+                        }}>
+                            <GithubIcon className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                            Check Github
                         </Button>
                     </div>
                 </div>
