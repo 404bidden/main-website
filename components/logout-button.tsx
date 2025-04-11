@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -10,25 +11,16 @@ export default function LogoutButton({ className }: { className?: string }) {
 
     const handleLogout = async () => {
         setIsLoading(true);
-        try {
-            const response = await fetch("/api/auth/signout", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            });
-
-            if (response.ok) {
-                router.push("/auth/login");
+        await authClient.signOut()
+            .then(() => {
+                router.push("/auth/login"); // Redirect to login page after logout
                 router.refresh(); // Refresh to update UI with unauthenticated state
-            } else {
-                console.error("Failed to logout");
-            }
-        } catch (error) {
-            console.error("Logout error:", error);
-        } finally {
-            setIsLoading(false);
-        }
+            })
+            .catch((error) => {
+                console.error("Logout error:", error);
+                setIsLoading(false); // Reset loading state on error
+            });
+        setIsLoading(false); // Reset loading state after logout
     };
 
     return (
