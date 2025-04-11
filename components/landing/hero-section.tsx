@@ -14,7 +14,7 @@ export function HeroSection() {
     return (
         <section className="relative w-full bg-gradient-to-b from-background via-background to-secondary/50 dark:from-background dark:via-background dark:to-secondary/20 flex justify-center">
             {/* Hero content */}
-            <div className="container mx-auto px-4 py-20 md:py-32 flex justify-center">
+            <div className="mx-auto px-4 py-20 md:py-32 flex justify-center">
                 <div
                     className={`max-w-3xl mx-auto text-center transition-opacity duration-1000 ease-in-out ${isVisible ? "opacity-100" : "opacity-0"}`}
                 >
@@ -36,9 +36,6 @@ export function HeroSection() {
                     </div>
                 </div>
             </div>
-
-            {/* Abstract shape */}
-            <div className="absolute -bottom-24 left-0 right-0 h-48 bg-gradient-to-b from-transparent to-muted/30 z-0"></div>
         </section>
     )
 }

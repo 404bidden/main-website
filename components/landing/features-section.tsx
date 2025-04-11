@@ -61,7 +61,11 @@ export function FeaturesSection() {
     ]
 
     return (
-        <section id="features" ref={sectionRef} className="relative bg-secondary/30 dark:bg-secondary/10 py-24 md:py-32 w-full flex justify-center">
+        <section
+            id="features"
+            ref={sectionRef}
+            className="relative bg-secondary/20 dark:bg-secondary/10 pt-12 pb-24 md:pt-20 md:pb-32 w-full flex justify-center"
+        >
             <div className="container mx-auto px-4 flex flex-col items-center">
                 <div className="max-w-3xl mx-auto text-center mb-16">
                     <h2 className="text-3xl md:text-4xl font-bold tracking-tighter mb-4 text-foreground">
