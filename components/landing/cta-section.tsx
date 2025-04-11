@@ -29,12 +29,10 @@ export function CtaSection() {
     }, [])
 
     return (
-        <section id="contact" ref={sectionRef} className="bg-gradient-to-b from-secondary/30 via-secondary/20 to-primary/5 dark:from-secondary/10 dark:via-secondary/5 dark:to-primary/5 py-24 md:py-32 w-full flex justify-center">
+        <section id="contact" ref={sectionRef} className="bg-gradient-to-b from-secondary/30 via-secondary/20 to-primary/5 dark:from-secondary/10 dark:via-secondary/5 dark:to-primary/5 pb-24 md:pb-32 w-full flex justify-center">
             <div className="container mx-auto px-4 flex justify-center">
-                <div
-                    className={`max-w-3xl mx-auto text-center transition-all duration-1000 ease-in-out ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-                        }`}
-                >
+                <div className={`max-w-3xl mx-auto text-center transition-all duration-1000 ease-in-out ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+                    }`}>
                     <h2 className="text-3xl md:text-4xl font-bold tracking-tighter mb-4 text-foreground">
                         Ready to Start <span className="text-primary">Monitoring</span> Your Applications?
                     </h2>
