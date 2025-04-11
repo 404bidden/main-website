@@ -1,0 +1,42 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model RequestLog {
+  id           String   @id
+  statusCode   Int?
+  responseTime Int?
+  isSuccess    Boolean
+  createdAt    DateTime @default(now())
+  testId       String
+  Test         Test     @relation(fields: [testId], references: [id])
+}
+
+model Test {
+  id         String       @id
+  url        String
+  method     String
+  payload    String?
+  interval   Int          @default(5)
+  isActive   Boolean      @default(true)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime
+  userId     String
+  RequestLog RequestLog[]
+  User       User         @relation(fields: [userId], references: [id])
+}
+
+model User {
+  id        String   @id
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  Test      Test[]
+}
