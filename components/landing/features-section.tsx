@@ -76,7 +76,7 @@ export function FeaturesSection() {
                     {features.map((feature, index) => (
                         <div
                             key={index}
-                            className={`bg-card dark:bg-card/80 backdrop-blur-sm border border-border rounded-lg shadow-sm hover:shadow-md transition-all duration-700 ease-in-out flex flex-col items-center text-center p-8 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+                            className={`bg-card dark:bg-card/80 backdrop-blur-sm border border-zinc-50 dark:border-zinc-700/50 rounded-lg shadow-sm hover:shadow-md transition-all duration-700 ease-in-out flex flex-col items-center text-center p-8 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
                                 }`}
                             style={{ transitionDelay: `${index * 100}ms` }}
                         >
