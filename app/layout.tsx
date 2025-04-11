@@ -44,24 +44,11 @@ export default function RootLayout({
                 <Providers
                     themeProps={{ attribute: "class", defaultTheme: "dark" }}
                 >
-                    <div className="relative flex h-screen flex-col">
+                    <div className="relative flex flex-col">
                         <Navbar />
-                        <main className="container mx-auto max-w-7xl grow px-6 pt-16">
+                        <main className="grow">
                             {children}
                         </main>
-                        <footer className="flex w-full items-center justify-center py-3">
-                            <Link
-                                isExternal
-                                className="flex items-center gap-1 text-current"
-                                href="https://heroui.com?utm_source=next-app-template"
-                                title="heroui.com homepage"
-                            >
-                                <span className="text-default-600">
-                                    Powered by
-                                </span>
-                                <p className="text-primary">HeroUI</p>
-                            </Link>
-                        </footer>
                     </div>
                 </Providers>
             </body>
