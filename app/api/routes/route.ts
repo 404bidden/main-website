@@ -36,18 +36,35 @@ export const GET = async (req: NextRequest) => {
     const routesWithMetrics = routes.map(route => {
         const logs = route.RequestLog;
         const lastLog = logs.length > 0 ? logs[0] : null;
-        
+
         // Calculate uptime percentage (successful requests / total requests)
         const uptimePercentage = logs.length > 0
             ? (logs.filter(log => log.isSuccess).length / logs.length) * 100
             : 0;
-        
+
+        // Calculate status based on uptime percentage
+        let status = 'Not monitored';
+        if (lastLog) {
+            // Check for latency issues
+            const hasLatencySpike = lastLog.responseTime && route.responseTimeThreshold
+                ? lastLog.responseTime > route.responseTimeThreshold
+                : false;
+
+            if (uptimePercentage >= 95) {
+                status = hasLatencySpike ? 'degraded' : 'up';
+            } else if (uptimePercentage >= 80) {
+                status = 'degraded';
+            } else {
+                status = 'down';
+            }
+        }
+
         return {
             id: route.id,
             name: route.name,
             url: route.url,
             method: route.method,
-            status: lastLog ? (lastLog.isSuccess ? 'Healthy' : 'Failed') : 'Not monitored',
+            status,
             statusCode: lastLog?.statusCode,
             responseTime: lastLog?.responseTime,
             lastChecked: lastLog?.createdAt || null,

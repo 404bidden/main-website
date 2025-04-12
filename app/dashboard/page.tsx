@@ -51,68 +51,11 @@ import { authClient } from "@/lib/auth-client";
 import { Chip } from "@heroui/chip";
 import { Input } from "@heroui/input";
 import { NumberInput } from "@heroui/number-input";
+import { Skeleton } from "@heroui/skeleton";
 import { addToast } from "@heroui/toast";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-
-// Mock data for routes
-// const routes = [
-//     {
-//         id: "1",
-//         name: "API Authentication",
-//         url: "https://api.example.com/auth",
-//         method: "POST",
-//         status: "up",
-//         responseTime: 120,
-//         lastChecked: new Date(Date.now() - 1000 * 60 * 5), // 5 minutes ago
-//         frequency: 5, // minutes
-//         uptime: 99.8,
-//     },
-//     {
-//         id: "2",
-//         name: "User Profile Endpoint",
-//         url: "https://api.example.com/users/profile",
-//         method: "GET",
-//         status: "down",
-//         responseTime: 0,
-//         lastChecked: new Date(Date.now() - 1000 * 60 * 2), // 2 minutes ago
-//         frequency: 1, // minutes
-//         uptime: 95.2,
-//     },
-//     {
-//         id: "3",
-//         name: "Payment Processing",
-//         url: "https://api.example.com/payments/process",
-//         method: "POST",
-//         status: "degraded",
-//         responseTime: 850,
-//         lastChecked: new Date(Date.now() - 1000 * 60 * 1), // 1 minute ago
-//         frequency: 2, // minutes
-//         uptime: 98.5,
-//     },
-//     {
-//         id: "4",
-//         name: "Product Catalog",
-//         url: "https://api.example.com/products",
-//         method: "GET",
-//         status: "up",
-//         responseTime: 95,
-//         lastChecked: new Date(Date.now() - 1000 * 60 * 3), // 3 minutes ago
-//         frequency: 10, // minutes
-//         uptime: 99.9,
-//     },
-//     {
-//         id: "5",
-//         name: "Order Status",
-//         url: "https://api.example.com/orders/status",
-//         method: "GET",
-//         status: "up",
-//         responseTime: 110,
-//         lastChecked: new Date(Date.now() - 1000 * 60 * 7), // 7 minutes ago
-//         frequency: 5, // minutes
-//         uptime: 99.7,
-//     },
-// ];
+import { TableSkeleton } from "@/components/dashboard/skeleton-table";
 
 // Helper function to render status badge
 function StatusBadge({ status }: { status: string }) {
@@ -142,6 +85,43 @@ function StatusBadge({ status }: { status: string }) {
             return <Chip variant="dot">{status}</Chip>;
     }
 }
+
+const SkeletonRouteCard = () => (
+    <Card className="animate-pulse">
+        <CardHeader className="pb-2">
+            <div className="flex justify-between items-start">
+                <div className="space-y-2">
+                    <Skeleton className="h-5 w-32" />
+                    <Skeleton className="h-3 w-48" />
+                </div>
+                <Skeleton className="h-8 w-8 rounded-full" />
+            </div>
+        </CardHeader>
+        <CardContent>
+            <div className="flex justify-between items-center mb-4">
+                <Skeleton className="h-6 w-20 rounded-full" />
+                <Skeleton className="h-6 w-16 rounded-full" />
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-sm">
+                <div>
+                    <Skeleton className="h-4 w-24 mb-2" />
+                    <Skeleton className="h-5 w-16" />
+                </div>
+                <div>
+                    <Skeleton className="h-4 w-16 mb-2" />
+                    <Skeleton className="h-5 w-16" />
+                </div>
+                <div>
+                    <Skeleton className="h-4 w-20 mb-2" />
+                    <Skeleton className="h-5 w-16" />
+                </div>
+            </div>
+        </CardContent>
+        <CardFooter className="pt-0">
+            <Skeleton className="h-9 w-full rounded-md" />
+        </CardFooter>
+    </Card>
+)
 
 const CreateRouteDialog = ({
     isOpen,
@@ -510,7 +490,7 @@ export default function Dashboard() {
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const { error, data, isPending } = authClient.useSession();
     const router = useRouter();
-    const { data: routes, isLoading } = useQuery<{
+    const { data: routes, isLoading, isPending: isRoutesPending } = useQuery<{
         id: string;
         name: string;
         url: string;
@@ -522,7 +502,7 @@ export default function Dashboard() {
         uptime: number;
     }[]>({
         queryKey: ["routes"],
-        initialData: [],
+        initialData: undefined,
         queryFn: async () => {
             const response = await fetch("/api/routes");
             if (!response.ok) {
@@ -560,30 +540,28 @@ export default function Dashboard() {
                     <Card>
                         <CardContent className="p-0">
                             <div className="overflow-x-auto">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Name</TableHead>
-                                            <TableHead>URL</TableHead>
-                                            <TableHead>Method</TableHead>
-                                            <TableHead>Status</TableHead>
-                                            <TableHead>Response Time</TableHead>
-                                            <TableHead>Last Checked</TableHead>
-                                            <TableHead>Uptime</TableHead>
-                                            <TableHead className="text-right">Actions</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {isLoading ? (
+                                {isLoading || isRoutesPending ? (
+                                    <TableSkeleton rowCount={5}  />
+                                ) : ((routes?.length === 0 || !routes) && !isLoading) ? (
+                                    <TableRow>
+                                        <TableCell colSpan={8} className="text-center py-6">No routes found. Create your first route to get started.</TableCell>
+                                    </TableRow>
+                                ) : (
+                                    <Table>
+                                        <TableHeader>
                                             <TableRow>
-                                                <TableCell colSpan={8} className="text-center py-6">Loading routes...</TableCell>
+                                                <TableHead>Name</TableHead>
+                                                <TableHead>URL</TableHead>
+                                                <TableHead>Method</TableHead>
+                                                <TableHead>Status</TableHead>
+                                                <TableHead>Response Time</TableHead>
+                                                <TableHead>Last Checked</TableHead>
+                                                <TableHead>Uptime</TableHead>
+                                                <TableHead className="text-right">Actions</TableHead>
                                             </TableRow>
-                                        ) : routes.length === 0 ? (
-                                            <TableRow>
-                                                <TableCell colSpan={8} className="text-center py-6">No routes found. Create your first route to get started.</TableCell>
-                                            </TableRow>
-                                        ) : (
-                                            routes.map((route) => (
+                                        </TableHeader>
+                                        <TableBody>
+                                            {routes.map((route) => (
                                                 <TableRow key={route.id}>
                                                     <TableCell className="font-medium">{route.name}</TableCell>
                                                     <TableCell className="font-mono text-sm truncate max-w-[200px]">{route.url}</TableCell>
@@ -595,11 +573,11 @@ export default function Dashboard() {
                                                     </TableCell>
                                                     <TableCell>
                                                         {route.status === "down" || !route.responseTime
-                                                            ? "-" 
+                                                            ? "-"
                                                             : `${route.responseTime}ms`}
                                                     </TableCell>
                                                     <TableCell>
-                                                        {route.lastChecked 
+                                                        {route.lastChecked
                                                             ? formatDistanceToNow(route.lastChecked, { addSuffix: true })
                                                             : "Never checked"}
                                                     </TableCell>
@@ -617,7 +595,27 @@ export default function Dashboard() {
                                                                 <DropdownMenuItem>View Details</DropdownMenuItem>
                                                                 <DropdownMenuItem>Edit Route</DropdownMenuItem>
                                                                 <DropdownMenuSeparator />
-                                                                <DropdownMenuItem>Check Now</DropdownMenuItem>
+                                                                <DropdownMenuItem onClick={async () => {
+                                                                    const response = await fetch(`/api/routes/${route.id}/run`, {
+                                                                        method: "POST",
+                                                                    })
+                                                                    if (response.ok) {
+                                                                        addToast({
+                                                                            title: "Route checked successfully!",
+                                                                            description: "The route has been checked.",
+                                                                            color: "success",
+                                                                            variant: "flat",
+                                                                        });
+                                                                    } else {
+                                                                        addToast({
+                                                                            title: "Error checking route",
+                                                                            description: "There was an error checking the route.",
+                                                                            color: "danger",
+                                                                            variant: "flat",
+                                                                        });
+                                                                    }
+
+                                                                }}>Check Now</DropdownMenuItem>
                                                                 <DropdownMenuItem>Pause Monitoring</DropdownMenuItem>
                                                                 <DropdownMenuSeparator />
                                                                 <DropdownMenuItem className="text-red-600">Delete Route</DropdownMenuItem>
@@ -625,10 +623,10 @@ export default function Dashboard() {
                                                         </DropdownMenu>
                                                     </TableCell>
                                                 </TableRow>
-                                            ))
-                                        )}
-                                    </TableBody>
-                                </Table>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                )}
                             </div>
                         </CardContent>
                     </Card>
@@ -636,7 +634,17 @@ export default function Dashboard() {
 
                 <TabsContent value="cards" className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {routes.map((route) => (
+                        {isLoading || isPending ? (
+                            Array.from({ length: 6 }, (_, index) => (
+                                <SkeletonRouteCard key={index} />
+                            ))
+                        ) : (routes?.length === 0 || !routes) ? (
+                            <Card className="col-span-full">
+                                <CardContent className="text-center py-6">
+                                    No routes found. Create your first route to get started.
+                                </CardContent>
+                            </Card>
+                        ) : routes.map((route) => (
                             <Card key={route.id}>
                                 <CardHeader className="pb-2">
                                     <div className="flex justify-between items-start">
@@ -717,17 +725,6 @@ export default function Dashboard() {
                                             </p>
                                             <p className="font-medium">
                                                 {route.monitoringInterval / 60} min
-                                            </p>
-                                        </div>
-                                        <div>
-                                            <p className="text-muted-foreground">
-                                                Last Checked
-                                            </p>
-                                            <p className="font-medium">
-                                                {route.lastChecked ? formatDistanceToNow(
-                                                    route.lastChecked,
-                                                    { addSuffix: true },
-                                                ): "Never checked"}
                                             </p>
                                         </div>
                                     </div>
