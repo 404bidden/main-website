@@ -140,7 +140,7 @@ export const POST = async (
         data: {
             routeId: route.id,
             statusCode: response.status,
-            responseTime: Date.now() - startTime,
+            responseTime: (performance.now() - startTime) / 1000, // Store as number in seconds
             isSuccess: response.ok,
             id: crypto.randomUUID(),
             createdAt: new Date(),

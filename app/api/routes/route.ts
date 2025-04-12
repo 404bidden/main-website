@@ -59,6 +59,7 @@ export const GET = async (req: NextRequest) => {
             }
         }
 
+        // Define type for the route with metrics
         return {
             id: route.id,
             name: route.name,

@@ -19,6 +19,7 @@ import { Label } from "../ui/label";
 import { Input } from "@heroui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { NumberInput } from "@heroui/number-input";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const CreateRouteDialog = ({
     isOpen,
@@ -26,7 +27,8 @@ export const CreateRouteDialog = ({
 }: {
     isOpen: boolean;
     onOpenChange: (open: boolean) => void;
-}) => {
+    }) => {
+    const queryClient = useQueryClient()
     const [formData, setFormData] = useState({
         // Basic Information
         name: "",
@@ -61,8 +63,11 @@ export const CreateRouteDialog = ({
                 variant: "flat",
             });
             onOpenChange(false);
+            queryClient.invalidateQueries({
+                queryKey: ["routes"],
+            });
         }
-    }, [formData]);
+    }, [formData, queryClient]);
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -376,7 +381,7 @@ export const CreateRouteDialog = ({
                     >
                         Cancel
                     </Button>
-                    <Button onClick={handleSubmit}>Add Route</Button>
+                    <Button onPress={handleSubmit}>Add Route</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

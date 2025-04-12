@@ -12,7 +12,7 @@ datasource db {
 model RequestLog {
   id           String   @id
   statusCode   Int?
-  responseTime Int?
+  responseTime Int?  // Time taken for the request in milliseconds.
   isSuccess    Boolean
   createdAt    DateTime @default(now())
   routeId      String
