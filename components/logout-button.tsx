@@ -11,7 +11,8 @@ export default function LogoutButton({ className }: { className?: string }) {
 
     const handleLogout = async () => {
         setIsLoading(true);
-        await authClient.signOut()
+        await authClient
+            .signOut()
             .then(() => {
                 router.push("/auth/login"); // Redirect to login page after logout
                 router.refresh(); // Refresh to update UI with unauthenticated state

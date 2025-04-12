@@ -1,7 +1,14 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+} from "@/components/ui/card";
 import { authClient } from "@/lib/auth-client";
 import { Form } from "@heroui/form";
 import { Input } from "@heroui/input";
@@ -14,31 +21,32 @@ export default function RegisterPage() {
     const router = useRouter();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const { error, data, isPending } = authClient.useSession()
-    
+    const { error, data, isPending } = authClient.useSession();
+
     useEffect(() => {
         if (!error && !isPending && data) {
             router.push("/"); // Redirect to home if authenticated
         }
-    }, [error, isPending, data, router]
-)
+    }, [error, isPending, data, router]);
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         try {
             const response = await authClient.signIn.email({
                 email,
                 password,
-            })
-            
+            });
+
             if (response.data && !response.error) {
                 router.push("/"); // Redirect to home after successful login
                 router.refresh(); // Refresh to update UI with authenticated state
             } else {
                 addToast({
-                    title: response.error.message || "Login failed. Please try again.",
+                    title:
+                        response.error.message ||
+                        "Login failed. Please try again.",
                     variant: "flat",
-                    color: "danger"
+                    color: "danger",
                 });
             }
         } catch (err) {
@@ -46,21 +54,24 @@ export default function RegisterPage() {
             addToast({
                 title: "An unexpected error occurred. Please try again.",
                 variant: "flat",
-                color: "danger"
+                color: "danger",
             });
         }
     };
-    
+
     return (
         <div className="flex min-h-screen items-center justify-center px-4 py-12">
             <Card className="w-full max-w-md">
                 <CardHeader>
-                    <CardTitle className="text-2xl font-bold">Login to Your Account</CardTitle>
-                    <CardDescription>Enter your credentials to access your account</CardDescription>
+                    <CardTitle className="text-2xl font-bold">
+                        Login to Your Account
+                    </CardTitle>
+                    <CardDescription>
+                        Enter your credentials to access your account
+                    </CardDescription>
                 </CardHeader>
                 <Form onSubmit={handleSubmit} className="w-full">
                     <CardContent className="space-y-4 w-full">
-
                         <div className="space-y-2">
                             <Input
                                 variant="bordered"
@@ -89,16 +100,16 @@ export default function RegisterPage() {
                         </div>
                     </CardContent>
                     <CardFooter className="flex flex-col space-y-4 w-full">
-                        <Button
-                            type="submit"
-                            className="w-full"
-                        >
+                        <Button type="submit" className="w-full">
                             Login
                             {/* {loading ? "Creating account..." : "Create Account"} */}
                         </Button>
                         <div className="text-center text-sm">
                             Don&apos; have an account?{" "}
-                            <Link href="/auth/register" className="text-blue-600 hover:underline">
+                            <Link
+                                href="/auth/register"
+                                className="text-blue-600 hover:underline"
+                            >
                                 Register
                             </Link>
                         </div>
@@ -106,5 +117,5 @@ export default function RegisterPage() {
                 </Form>
             </Card>
         </div>
-    )
+    );
 }

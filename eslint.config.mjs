@@ -100,9 +100,12 @@ export default [
             "@typescript-eslint/no-non-null-asserted-optional-chain": "error",
             "@typescript-eslint/prefer-nullish-coalescing": "warn",
             "@typescript-eslint/prefer-optional-chain": "warn",
-            "@typescript-eslint/ban-ts-comment": ["warn", {
-                "ts-ignore": "allow-with-description"
-            }],
+            "@typescript-eslint/ban-ts-comment": [
+                "warn",
+                {
+                    "ts-ignore": "allow-with-description",
+                },
+            ],
             "@typescript-eslint/naming-convention": [
                 "warn",
                 {
@@ -145,9 +148,13 @@ export default [
             "react/prop-types": "off",
             "react/jsx-uses-react": "off",
             "react/react-in-jsx-scope": "off",
-            "react-hooks/exhaustive-deps": ["warn", {
-                "additionalHooks": "(useRecoilCallback|useRecoilTransaction_UNSTABLE)"
-            }],
+            "react-hooks/exhaustive-deps": [
+                "warn",
+                {
+                    additionalHooks:
+                        "(useRecoilCallback|useRecoilTransaction_UNSTABLE)",
+                },
+            ],
             "jsx-a11y/click-events-have-key-events": "warn",
             "jsx-a11y/interactive-supports-focus": "warn",
             "react/self-closing-comp": "warn",
@@ -242,7 +249,10 @@ export default [
             "import/no-absolute-path": "error",
             "import/no-self-import": "error",
             "import/no-cycle": ["warn", { maxDepth: 3 }],
-            "import/no-useless-path-segments": ["warn", { noUselessIndex: true }],
+            "import/no-useless-path-segments": [
+                "warn",
+                { noUselessIndex: true },
+            ],
             "import/first": "warn",
             "import/no-duplicates": "warn",
             "import/exports-last": "warn",
@@ -355,7 +365,10 @@ export default [
         rules: {
             "eslint-comments/no-unused-disable": "warn",
             "eslint-comments/no-unlimited-disable": "warn",
-            "eslint-comments/require-description": ["warn", { ignore: ["eslint-enable"] }],
+            "eslint-comments/require-description": [
+                "warn",
+                { ignore: ["eslint-enable"] },
+            ],
         },
     },
 
