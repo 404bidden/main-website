@@ -163,26 +163,26 @@ const CreateRouteDialog = ({
         responseTimeThreshold: 500,
         monitoringInterval: "300",
         retries: 3,
-        alertEmail: ""
+        alertEmail: "",
     });
 
     const handleChange = (field: string, value: string | number) => {
-        setFormData(prev => ({ ...prev, [field]: value }));
+        setFormData((prev) => ({ ...prev, [field]: value }));
     };
     const handleSubmit = useCallback(async () => {
-        console.log('Submitting form data:', formData);
+        console.log("Submitting form data:", formData);
         const response = await fetch("/api/routes", {
             method: "POST",
             body: JSON.stringify(formData),
-        })
+        });
         if (response.ok) {
             addToast({
                 title: "Successfully created route!",
                 description: "Your route has been successfully created.",
                 color: "success",
-                variant: "flat"
-            })
-            onOpenChange(false)
+                variant: "flat",
+            });
+            onOpenChange(false);
         }
     }, [formData]);
 
@@ -205,10 +205,15 @@ const CreateRouteDialog = ({
                     <div className="py-4 pr-5 space-y-4">
                         {/* Basic Information */}
                         <div className="rounded-lg border border-zinc-200 dark:border-zinc-700/50 p-3">
-                            <h3 className="font-medium mb-3">Basic Information</h3>
+                            <h3 className="font-medium mb-3">
+                                Basic Information
+                            </h3>
                             <div className="space-y-4">
                                 <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="name" className="text-right">
+                                    <Label
+                                        htmlFor="name"
+                                        className="text-right"
+                                    >
                                         Name
                                     </Label>
                                     <Input
@@ -218,11 +223,16 @@ const CreateRouteDialog = ({
                                         placeholder="API Authentication"
                                         className="col-span-3"
                                         value={formData.name}
-                                        onValueChange={(value) => handleChange("name", value)}
+                                        onValueChange={(value) =>
+                                            handleChange("name", value)
+                                        }
                                     />
                                 </div>
                                 <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="description" className="text-right">
+                                    <Label
+                                        htmlFor="description"
+                                        className="text-right"
+                                    >
                                         Description
                                     </Label>
                                     <Input
@@ -231,7 +241,9 @@ const CreateRouteDialog = ({
                                         placeholder="Authentication endpoint for API"
                                         className="col-span-3"
                                         value={formData.description}
-                                        onValueChange={(value) => handleChange("description", value)}
+                                        onValueChange={(value) =>
+                                            handleChange("description", value)
+                                        }
                                     />
                                 </div>
                                 <div className="grid grid-cols-4 items-center gap-4">
@@ -245,28 +257,47 @@ const CreateRouteDialog = ({
                                         placeholder="https://api.example.com/auth"
                                         className="col-span-3"
                                         value={formData.url}
-                                        onValueChange={(value) => handleChange("url", value)}
+                                        onValueChange={(value) =>
+                                            handleChange("url", value)
+                                        }
                                     />
                                 </div>
                                 <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="method" className="text-right">
+                                    <Label
+                                        htmlFor="method"
+                                        className="text-right"
+                                    >
                                         Method
                                     </Label>
                                     <Select
                                         required
                                         value={formData.method}
-                                        onValueChange={(value) => handleChange("method", value)}
+                                        onValueChange={(value) =>
+                                            handleChange("method", value)
+                                        }
                                     >
                                         <SelectTrigger className="col-span-3">
                                             <SelectValue placeholder="GET" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="GET">GET</SelectItem>
-                                            <SelectItem value="POST">POST</SelectItem>
-                                            <SelectItem value="PUT">PUT</SelectItem>
-                                            <SelectItem value="DELETE">DELETE</SelectItem>
-                                            <SelectItem value="PATCH">PATCH</SelectItem>
-                                            <SelectItem value="HEAD">HEAD</SelectItem>
+                                            <SelectItem value="GET">
+                                                GET
+                                            </SelectItem>
+                                            <SelectItem value="POST">
+                                                POST
+                                            </SelectItem>
+                                            <SelectItem value="PUT">
+                                                PUT
+                                            </SelectItem>
+                                            <SelectItem value="DELETE">
+                                                DELETE
+                                            </SelectItem>
+                                            <SelectItem value="PATCH">
+                                                PATCH
+                                            </SelectItem>
+                                            <SelectItem value="HEAD">
+                                                HEAD
+                                            </SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -275,10 +306,15 @@ const CreateRouteDialog = ({
 
                         {/* Request Details */}
                         <div className="rounded-lg border border-zinc-200 dark:border-zinc-700/50 p-3">
-                            <h3 className="font-medium mb-3">Request Details</h3>
+                            <h3 className="font-medium mb-3">
+                                Request Details
+                            </h3>
                             <div className="space-y-4">
                                 <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="requestHeaders" className="text-right">
+                                    <Label
+                                        htmlFor="requestHeaders"
+                                        className="text-right"
+                                    >
                                         Request Headers
                                     </Label>
                                     <Input
@@ -287,11 +323,19 @@ const CreateRouteDialog = ({
                                         placeholder='{"Content-Type": "application/json"}'
                                         className="col-span-3"
                                         value={formData.requestHeaders}
-                                        onValueChange={(value) => handleChange("requestHeaders", value)}
+                                        onValueChange={(value) =>
+                                            handleChange(
+                                                "requestHeaders",
+                                                value,
+                                            )
+                                        }
                                     />
                                 </div>
                                 <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="requestBody" className="text-right">
+                                    <Label
+                                        htmlFor="requestBody"
+                                        className="text-right"
+                                    >
                                         Request Body
                                     </Label>
                                     <Input
@@ -300,7 +344,9 @@ const CreateRouteDialog = ({
                                         placeholder='{"username": "test", "password": "test"}'
                                         className="col-span-3"
                                         value={formData.requestBody}
-                                        onValueChange={(value) => handleChange("requestBody", value)}
+                                        onValueChange={(value) =>
+                                            handleChange("requestBody", value)
+                                        }
                                     />
                                 </div>
                             </div>
@@ -308,10 +354,15 @@ const CreateRouteDialog = ({
 
                         {/* Monitoring Configuration */}
                         <div className="rounded-lg border border-zinc-200 dark:border-zinc-700/50 p-3">
-                            <h3 className="font-medium mb-3">Monitoring Configuration</h3>
+                            <h3 className="font-medium mb-3">
+                                Monitoring Configuration
+                            </h3>
                             <div className="space-y-4">
                                 <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="expectedStatusCode" className="text-right">
+                                    <Label
+                                        htmlFor="expectedStatusCode"
+                                        className="text-right"
+                                    >
                                         Expected Status
                                     </Label>
                                     <NumberInput
@@ -321,11 +372,19 @@ const CreateRouteDialog = ({
                                         placeholder="200"
                                         className="col-span-3"
                                         value={formData.expectedStatusCode}
-                                        onValueChange={(value) => handleChange("expectedStatusCode", value)}
+                                        onValueChange={(value) =>
+                                            handleChange(
+                                                "expectedStatusCode",
+                                                value,
+                                            )
+                                        }
                                     />
                                 </div>
                                 <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="responseTimeThreshold" className="text-right">
+                                    <Label
+                                        htmlFor="responseTimeThreshold"
+                                        className="text-right"
+                                    >
                                         Response Time Threshold (ms)
                                     </Label>
                                     <NumberInput
@@ -335,32 +394,58 @@ const CreateRouteDialog = ({
                                         placeholder="500"
                                         className="col-span-3"
                                         value={formData.responseTimeThreshold}
-                                        onValueChange={(value) => handleChange("responseTimeThreshold", value)}
+                                        onValueChange={(value) =>
+                                            handleChange(
+                                                "responseTimeThreshold",
+                                                value,
+                                            )
+                                        }
                                     />
                                 </div>
                                 <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="monitoringInterval" className="text-right">
+                                    <Label
+                                        htmlFor="monitoringInterval"
+                                        className="text-right"
+                                    >
                                         Monitoring Interval
                                     </Label>
                                     <Select
                                         required
                                         value={formData.monitoringInterval}
-                                        onValueChange={(value) => handleChange("monitoringInterval", value)}
+                                        onValueChange={(value) =>
+                                            handleChange(
+                                                "monitoringInterval",
+                                                value,
+                                            )
+                                        }
                                     >
                                         <SelectTrigger className="col-span-3">
                                             <SelectValue placeholder="5 minutes" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="60">1 minute</SelectItem>
-                                            <SelectItem value="300">5 minutes</SelectItem>
-                                            <SelectItem value="900">15 minutes</SelectItem>
-                                            <SelectItem value="1800">30 minutes</SelectItem>
-                                            <SelectItem value="3600">1 hour</SelectItem>
+                                            <SelectItem value="60">
+                                                1 minute
+                                            </SelectItem>
+                                            <SelectItem value="300">
+                                                5 minutes
+                                            </SelectItem>
+                                            <SelectItem value="900">
+                                                15 minutes
+                                            </SelectItem>
+                                            <SelectItem value="1800">
+                                                30 minutes
+                                            </SelectItem>
+                                            <SelectItem value="3600">
+                                                1 hour
+                                            </SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
                                 <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="retries" className="text-right">
+                                    <Label
+                                        htmlFor="retries"
+                                        className="text-right"
+                                    >
                                         Retries
                                     </Label>
                                     <NumberInput
@@ -371,7 +456,9 @@ const CreateRouteDialog = ({
                                         type="number"
                                         className="col-span-3"
                                         value={formData.retries}
-                                        onValueChange={(value) => handleChange("retries", value)}
+                                        onValueChange={(value) =>
+                                            handleChange("retries", value)
+                                        }
                                     />
                                 </div>
                             </div>
@@ -382,7 +469,10 @@ const CreateRouteDialog = ({
                             <h3 className="font-medium mb-3">Notifications</h3>
                             <div className="space-y-4">
                                 <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="alertEmail" className="text-right">
+                                    <Label
+                                        htmlFor="alertEmail"
+                                        className="text-right"
+                                    >
                                         Alert Email
                                     </Label>
                                     <Input
@@ -392,7 +482,9 @@ const CreateRouteDialog = ({
                                         type="email"
                                         className="col-span-3"
                                         value={formData.alertEmail}
-                                        onValueChange={(value) => handleChange("alertEmail", value)}
+                                        onValueChange={(value) =>
+                                            handleChange("alertEmail", value)
+                                        }
                                     />
                                 </div>
                             </div>
@@ -406,11 +498,7 @@ const CreateRouteDialog = ({
                     >
                         Cancel
                     </Button>
-                    <Button
-                        onClick={handleSubmit}
-                    >
-                        Add Route
-                    </Button>
+                    <Button onClick={handleSubmit}>Add Route</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
