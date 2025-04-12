@@ -39,7 +39,7 @@ export const DELETE = async (
     });
 };
 
-export const GET = async(
+export const GET = async (
     req: NextRequest,
     {
         params,
@@ -73,4 +73,4 @@ export const GET = async(
     return new Response(JSON.stringify(result), {
         status: 200,
     });
-}
+};
