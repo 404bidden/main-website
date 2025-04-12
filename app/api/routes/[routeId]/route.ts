@@ -13,6 +13,10 @@ export const DELETE = async (
         }>;
     },
 ) => {
+    const { routeId } = await params;
+    if (!routeId) {
+        return new Response("Route ID is required", { status: 400 });
+    }
     const session = await auth.api.getSession({
         headers: await headers(),
     });
@@ -22,7 +26,6 @@ export const DELETE = async (
 
     const { user } = session;
 
-    const { routeId } = await params;
     const prisma = new PrismaClient();
     const result = await prisma.route.delete({
         where: {
@@ -30,7 +33,44 @@ export const DELETE = async (
             userId: session.user.id,
         },
     });
+
     return new Response(JSON.stringify(result), {
         status: 200,
     });
 };
+
+export const GET = async(
+    req: NextRequest,
+    {
+        params,
+    }: {
+        params: Promise<{
+            routeId: string;
+        }>;
+    },
+) => {
+    const { routeId } = await params;
+    if (!routeId) {
+        return new Response("Route ID is required", { status: 400 });
+    }
+    const session = await auth.api.getSession({
+        headers: await headers(),
+    });
+    if (!session) {
+        return new Response("Unauthorized", { status: 401 });
+    }
+
+    const { user } = session;
+
+    const prisma = new PrismaClient();
+    const result = await prisma.route.findUnique({
+        where: {
+            id: routeId,
+            userId: session.user.id,
+        },
+    });
+
+    return new Response(JSON.stringify(result), {
+        status: 200,
+    });
+}
