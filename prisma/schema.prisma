@@ -15,22 +15,29 @@ model RequestLog {
   responseTime Int?
   isSuccess    Boolean
   createdAt    DateTime @default(now())
-  testId       String
-  Test         Test     @relation(fields: [testId], references: [id])
+  routeId      String
+  Route         Route     @relation(fields: [routeId], references: [id])
 }
 
-model Test {
-  id         String       @id
-  url        String
-  method     String
-  payload    String?
-  interval   Int          @default(5)
-  isActive   Boolean      @default(true)
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime
-  userId     String
-  RequestLog RequestLog[]
-  User       User         @relation(fields: [userId], references: [id])
+model Route {
+  id                    String    @id
+  name                  String    // Name of the route.
+  description           String?   // Description of the route.
+  url                   String    // URL of the route to be monitored.
+  method                String    // HTTP method (GET, POST, etc.).
+  requestHeaders        Json?     // Headers to be sent with the request.
+  requestBody           String?   // Body of the request (for POST, PUT, etc.).
+  expectedStatusCode    Int?      // The expected HTTP status code from the route.
+  responseTimeThreshold Int?      // Maximum acceptable response time (ms).
+  monitoringInterval    Int       @default(5) // Interval for checking the route (seconds).
+  retries               Int?      // Number of retry attempts on failure.
+  alertEmail            String?   // Email for sending alerts if the check fails.
+  isActive              Boolean   @default(true)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @default(now())
+  userId                String
+  RequestLog            RequestLog[]
+  User                  User      @relation(fields: [userId], references: [id])
 }
 
 model User {
@@ -39,7 +46,7 @@ model User {
   name          String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime
-  Test          Test[]
+  routes        Route[]
   emailVerified Boolean
   image         String?
   sessions      Session[]
