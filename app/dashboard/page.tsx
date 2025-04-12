@@ -517,8 +517,8 @@ export default function Dashboard() {
     }, [error, isPending, data, router]);
 
     return (
-        <div className="container mx-auto py-6">
-            <div className="flex justify-between items-center mb-6">
+        <div className="container flex items-center justify-center max-w-[95%] flex-col mx-auto py-6">
+            <div className="flex justify-between items-center mb-6 w-full">
                 <h1 className="text-3xl font-bold">Route Monitoring</h1>
                 <CreateRouteDialog
                     isOpen={isCreateDialogOpen}
