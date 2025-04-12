@@ -22,9 +22,44 @@ export const GET = async (req: NextRequest) => {
         where: {
             userId: user.id,
         },
+        include: {
+            RequestLog: {
+                orderBy: {
+                    createdAt: 'desc'
+                },
+                take: 100 // Fetch the last 100 logs to calculate uptime
+            }
+        }
     });
 
-    return new Response(JSON.stringify(routes), {
+    // Enhance the route data with metrics
+    const routesWithMetrics = routes.map(route => {
+        const logs = route.RequestLog;
+        const lastLog = logs.length > 0 ? logs[0] : null;
+        
+        // Calculate uptime percentage (successful requests / total requests)
+        const uptimePercentage = logs.length > 0
+            ? (logs.filter(log => log.isSuccess).length / logs.length) * 100
+            : 0;
+        
+        return {
+            id: route.id,
+            name: route.name,
+            url: route.url,
+            method: route.method,
+            status: lastLog ? (lastLog.isSuccess ? 'Healthy' : 'Failed') : 'Not monitored',
+            statusCode: lastLog?.statusCode,
+            responseTime: lastLog?.responseTime,
+            lastChecked: lastLog?.createdAt || null,
+            uptime: uptimePercentage.toFixed(2) + '%',
+            expectedStatusCode: route.expectedStatusCode,
+            description: route.description,
+            isActive: route.isActive,
+            monitoringInterval: route.monitoringInterval
+        };
+    });
+
+    return new Response(JSON.stringify(routesWithMetrics), {
         status: 200,
         headers: {
             "Content-Type": "application/json",

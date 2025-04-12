@@ -50,68 +50,69 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { authClient } from "@/lib/auth-client";
 import { Chip } from "@heroui/chip";
 import { Input } from "@heroui/input";
-import { addToast } from "@heroui/toast";
 import { NumberInput } from "@heroui/number-input";
+import { addToast } from "@heroui/toast";
+import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 
 // Mock data for routes
-const routes = [
-    {
-        id: "1",
-        name: "API Authentication",
-        url: "https://api.example.com/auth",
-        method: "POST",
-        status: "up",
-        responseTime: 120,
-        lastChecked: new Date(Date.now() - 1000 * 60 * 5), // 5 minutes ago
-        frequency: 5, // minutes
-        uptime: 99.8,
-    },
-    {
-        id: "2",
-        name: "User Profile Endpoint",
-        url: "https://api.example.com/users/profile",
-        method: "GET",
-        status: "down",
-        responseTime: 0,
-        lastChecked: new Date(Date.now() - 1000 * 60 * 2), // 2 minutes ago
-        frequency: 1, // minutes
-        uptime: 95.2,
-    },
-    {
-        id: "3",
-        name: "Payment Processing",
-        url: "https://api.example.com/payments/process",
-        method: "POST",
-        status: "degraded",
-        responseTime: 850,
-        lastChecked: new Date(Date.now() - 1000 * 60 * 1), // 1 minute ago
-        frequency: 2, // minutes
-        uptime: 98.5,
-    },
-    {
-        id: "4",
-        name: "Product Catalog",
-        url: "https://api.example.com/products",
-        method: "GET",
-        status: "up",
-        responseTime: 95,
-        lastChecked: new Date(Date.now() - 1000 * 60 * 3), // 3 minutes ago
-        frequency: 10, // minutes
-        uptime: 99.9,
-    },
-    {
-        id: "5",
-        name: "Order Status",
-        url: "https://api.example.com/orders/status",
-        method: "GET",
-        status: "up",
-        responseTime: 110,
-        lastChecked: new Date(Date.now() - 1000 * 60 * 7), // 7 minutes ago
-        frequency: 5, // minutes
-        uptime: 99.7,
-    },
-];
+// const routes = [
+//     {
+//         id: "1",
+//         name: "API Authentication",
+//         url: "https://api.example.com/auth",
+//         method: "POST",
+//         status: "up",
+//         responseTime: 120,
+//         lastChecked: new Date(Date.now() - 1000 * 60 * 5), // 5 minutes ago
+//         frequency: 5, // minutes
+//         uptime: 99.8,
+//     },
+//     {
+//         id: "2",
+//         name: "User Profile Endpoint",
+//         url: "https://api.example.com/users/profile",
+//         method: "GET",
+//         status: "down",
+//         responseTime: 0,
+//         lastChecked: new Date(Date.now() - 1000 * 60 * 2), // 2 minutes ago
+//         frequency: 1, // minutes
+//         uptime: 95.2,
+//     },
+//     {
+//         id: "3",
+//         name: "Payment Processing",
+//         url: "https://api.example.com/payments/process",
+//         method: "POST",
+//         status: "degraded",
+//         responseTime: 850,
+//         lastChecked: new Date(Date.now() - 1000 * 60 * 1), // 1 minute ago
+//         frequency: 2, // minutes
+//         uptime: 98.5,
+//     },
+//     {
+//         id: "4",
+//         name: "Product Catalog",
+//         url: "https://api.example.com/products",
+//         method: "GET",
+//         status: "up",
+//         responseTime: 95,
+//         lastChecked: new Date(Date.now() - 1000 * 60 * 3), // 3 minutes ago
+//         frequency: 10, // minutes
+//         uptime: 99.9,
+//     },
+//     {
+//         id: "5",
+//         name: "Order Status",
+//         url: "https://api.example.com/orders/status",
+//         method: "GET",
+//         status: "up",
+//         responseTime: 110,
+//         lastChecked: new Date(Date.now() - 1000 * 60 * 7), // 7 minutes ago
+//         frequency: 5, // minutes
+//         uptime: 99.7,
+//     },
+// ];
 
 // Helper function to render status badge
 function StatusBadge({ status }: { status: string }) {
@@ -509,6 +510,29 @@ export default function Dashboard() {
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const { error, data, isPending } = authClient.useSession();
     const router = useRouter();
+    const { data: routes, isLoading } = useQuery<{
+        id: string;
+        name: string;
+        url: string;
+        method: string;
+        status: string;
+        responseTime: number;
+        lastChecked?: Date | null;
+        monitoringInterval: number;
+        uptime: number;
+    }[]>({
+        queryKey: ["routes"],
+        initialData: [],
+        queryFn: async () => {
+            const response = await fetch("/api/routes");
+            if (!response.ok) {
+                throw new Error("Network response was not ok");
+            }
+            return response.json();
+        },
+        enabled: !!data, // Only run the query if the user is authenticated
+    })
+
 
     useEffect(() => {
         if (error && !isPending && !data) {
@@ -535,100 +559,77 @@ export default function Dashboard() {
                 <TabsContent value="table" className="space-y-4">
                     <Card>
                         <CardContent className="p-0">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Name</TableHead>
-                                        <TableHead>URL</TableHead>
-                                        <TableHead>Method</TableHead>
-                                        <TableHead>Status</TableHead>
-                                        <TableHead>Response Time</TableHead>
-                                        <TableHead>Last Checked</TableHead>
-                                        <TableHead>Uptime</TableHead>
-                                        <TableHead className="text-right">
-                                            Actions
-                                        </TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {routes.map((route) => (
-                                        <TableRow key={route.id}>
-                                            <TableCell className="font-medium">
-                                                {route.name}
-                                            </TableCell>
-                                            <TableCell className="font-mono text-sm truncate max-w-[200px]">
-                                                {route.url}
-                                            </TableCell>
-                                            <TableCell>
-                                                <Chip
-                                                    color="secondary"
-                                                    variant="dot"
-                                                >
-                                                    {route.method}
-                                                </Chip>
-                                            </TableCell>
-                                            <TableCell>
-                                                <StatusBadge
-                                                    status={route.status}
-                                                />
-                                            </TableCell>
-                                            <TableCell>
-                                                {route.status === "down"
-                                                    ? "-"
-                                                    : `${route.responseTime}ms`}
-                                            </TableCell>
-                                            <TableCell>
-                                                {formatDistanceToNow(
-                                                    route.lastChecked,
-                                                    { addSuffix: true },
-                                                )}
-                                            </TableCell>
-                                            <TableCell>
-                                                {route.uptime}%
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger
-                                                        asChild
-                                                    >
-                                                        <Button
-                                                            variant="ghost"
-                                                            className="h-8 w-8 p-0"
-                                                        >
-                                                            <span className="sr-only">
-                                                                Open menu
-                                                            </span>
-                                                            <MoreHorizontal className="h-4 w-4" />
-                                                        </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end">
-                                                        <DropdownMenuLabel>
-                                                            Actions
-                                                        </DropdownMenuLabel>
-                                                        <DropdownMenuItem>
-                                                            View Details
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuItem>
-                                                            Edit Route
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuSeparator />
-                                                        <DropdownMenuItem>
-                                                            Check Now
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuItem>
-                                                            Pause Monitoring
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuSeparator />
-                                                        <DropdownMenuItem className="text-red-600">
-                                                            Delete Route
-                                                        </DropdownMenuItem>
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
-                                            </TableCell>
+                            <div className="overflow-x-auto">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Name</TableHead>
+                                            <TableHead>URL</TableHead>
+                                            <TableHead>Method</TableHead>
+                                            <TableHead>Status</TableHead>
+                                            <TableHead>Response Time</TableHead>
+                                            <TableHead>Last Checked</TableHead>
+                                            <TableHead>Uptime</TableHead>
+                                            <TableHead className="text-right">Actions</TableHead>
                                         </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {isLoading ? (
+                                            <TableRow>
+                                                <TableCell colSpan={8} className="text-center py-6">Loading routes...</TableCell>
+                                            </TableRow>
+                                        ) : routes.length === 0 ? (
+                                            <TableRow>
+                                                <TableCell colSpan={8} className="text-center py-6">No routes found. Create your first route to get started.</TableCell>
+                                            </TableRow>
+                                        ) : (
+                                            routes.map((route) => (
+                                                <TableRow key={route.id}>
+                                                    <TableCell className="font-medium">{route.name}</TableCell>
+                                                    <TableCell className="font-mono text-sm truncate max-w-[200px]">{route.url}</TableCell>
+                                                    <TableCell>
+                                                        <Chip color="secondary" variant="dot">{route.method}</Chip>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <StatusBadge status={route.status} />
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {route.status === "down" || !route.responseTime
+                                                            ? "-" 
+                                                            : `${route.responseTime}ms`}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {route.lastChecked 
+                                                            ? formatDistanceToNow(route.lastChecked, { addSuffix: true })
+                                                            : "Never checked"}
+                                                    </TableCell>
+                                                    <TableCell>{route.uptime}</TableCell>
+                                                    <TableCell className="text-right">
+                                                        <DropdownMenu>
+                                                            <DropdownMenuTrigger asChild>
+                                                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                                                    <span className="sr-only">Open menu</span>
+                                                                    <MoreHorizontal className="h-4 w-4" />
+                                                                </Button>
+                                                            </DropdownMenuTrigger>
+                                                            <DropdownMenuContent align="end">
+                                                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                                <DropdownMenuItem>View Details</DropdownMenuItem>
+                                                                <DropdownMenuItem>Edit Route</DropdownMenuItem>
+                                                                <DropdownMenuSeparator />
+                                                                <DropdownMenuItem>Check Now</DropdownMenuItem>
+                                                                <DropdownMenuItem>Pause Monitoring</DropdownMenuItem>
+                                                                <DropdownMenuSeparator />
+                                                                <DropdownMenuItem className="text-red-600">Delete Route</DropdownMenuItem>
+                                                            </DropdownMenuContent>
+                                                        </DropdownMenu>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </div>
                         </CardContent>
                     </Card>
                 </TabsContent>
@@ -697,7 +698,7 @@ export default function Dashboard() {
                                                 Response Time
                                             </p>
                                             <p className="font-medium">
-                                                {route.status === "down"
+                                                {route.status === "down" || !route.responseTime
                                                     ? "-"
                                                     : `${route.responseTime}ms`}
                                             </p>
@@ -707,7 +708,7 @@ export default function Dashboard() {
                                                 Uptime
                                             </p>
                                             <p className="font-medium">
-                                                {route.uptime}%
+                                                {route.uptime}
                                             </p>
                                         </div>
                                         <div>
@@ -715,7 +716,7 @@ export default function Dashboard() {
                                                 Frequency
                                             </p>
                                             <p className="font-medium">
-                                                {route.frequency} min
+                                                {route.monitoringInterval / 60} min
                                             </p>
                                         </div>
                                         <div>
@@ -723,10 +724,10 @@ export default function Dashboard() {
                                                 Last Checked
                                             </p>
                                             <p className="font-medium">
-                                                {formatDistanceToNow(
+                                                {route.lastChecked ? formatDistanceToNow(
                                                     route.lastChecked,
                                                     { addSuffix: true },
-                                                )}
+                                                ): "Never checked"}
                                             </p>
                                         </div>
                                     </div>
