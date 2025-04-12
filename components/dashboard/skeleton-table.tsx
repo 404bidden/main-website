@@ -27,10 +27,10 @@ export function TableSkeleton({ rowCount = 5 }: TableSkeletonProps) {
                     .map((_, rowIndex) => (
                         <TableRow key={rowIndex} className="animate-pulse rounded-lg overflow-hidden">
                             <TableCell>
-                                <Skeleton className="h-5 w-24" />
+                                <Skeleton className="h-5 w-24 rounded-md" />
                             </TableCell>
                             <TableCell className="font-mono">
-                                <Skeleton className="h-4 w-40" />
+                                <Skeleton className="h-4 w-40 rounded-md" />
                             </TableCell>
                             <TableCell>
                                 <Skeleton className="h-6 w-16 rounded-full" />
@@ -39,13 +39,13 @@ export function TableSkeleton({ rowCount = 5 }: TableSkeletonProps) {
                                 <Skeleton className="h-6 w-20 rounded-full" />
                             </TableCell>
                             <TableCell>
-                                <Skeleton className="h-4 w-12" />
+                                <Skeleton className="h-4 w-12 rounded-md" />
                             </TableCell>
                             <TableCell>
-                                <Skeleton className="h-4 w-28" />
+                                <Skeleton className="h-4 w-28 rounded-md" />
                             </TableCell>
                             <TableCell>
-                                <Skeleton className="h-4 w-16" />
+                                <Skeleton className="h-4 w-16 rounded-md" />
                             </TableCell>
                             <TableCell className="text-right">
                                 <div className="flex justify-end">
