@@ -228,9 +228,6 @@ export const CreateRouteDialog = ({
                     variant: "flat",
                 });
                 onOpenChange(false);
-                queryClient.invalidateQueries({
-                    queryKey: ["routes"],
-                });
             } else {
                 const errorData = await response.json().catch(() => ({ message: "Unknown error occurred" }));
                 addToast({

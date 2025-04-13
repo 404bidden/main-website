@@ -40,6 +40,7 @@ export default function Dashboard() {
         data: routes,
         isLoading,
         isPending: isRoutesPending,
+        refetch,
     } = useQuery<RouteWithMetrics[]>({
         queryKey: ["routes"],
         initialData: undefined,
@@ -53,6 +54,16 @@ export default function Dashboard() {
         enabled: !!data, // Only run the query if the user is authenticated
     });
 
+    // Handle dialog close - refetch routes data
+    const handleDialogChange = (isOpen: boolean) => {
+        setIsCreateDialogOpen(isOpen);
+
+        // If the dialog is closing, refetch the routes data
+        if (!isOpen) {
+            refetch();
+        }
+    };
+
     useEffect(() => {
         if (error && !isPending && !data) {
             router.push("/auth/login"); // Redirect to login if not authenticated
@@ -65,7 +76,7 @@ export default function Dashboard() {
                 <h1 className="text-3xl font-bold">Route Monitoring</h1>
                 <CreateRouteDialog
                     isOpen={isCreateDialogOpen}
-                    onOpenChange={setIsCreateDialogOpen}
+                    onOpenChange={handleDialogChange}
                 />
             </div>
 
@@ -82,7 +93,7 @@ export default function Dashboard() {
                                 {isLoading || isRoutesPending ? (
                                     <TableSkeleton rowCount={5} />
                                 ) : (routes?.length === 0 || !routes) &&
-                                  !isLoading ? (
+                                    !isLoading ? (
                                     <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
                                         <Server className="h-12 w-12 text-slate-200 mb-4" />
                                         <h3 className="text-lg font-medium  mb-1">
@@ -95,7 +106,7 @@ export default function Dashboard() {
                                         </p>
                                         <Button
                                             onClick={() =>
-                                                setIsCreateDialogOpen(true)
+                                                handleDialogChange(true)
                                             }
                                         >
                                             <Plus className="mr-2 h-4 w-4" />{" "}
@@ -192,7 +203,7 @@ export default function Dashboard() {
                                                 </p>
                                                 <p className="font-medium">
                                                     {route.status === "down" ||
-                                                    !route.responseTime
+                                                        !route.responseTime
                                                         ? "-"
                                                         : `${route.responseTime}ms`}
                                                 </p>
