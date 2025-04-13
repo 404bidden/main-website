@@ -28,6 +28,25 @@ import {
     SelectValue,
 } from "../ui/select";
 
+// Types
+interface RouteFormData {
+    // Basic Information
+    name: string;
+    description: string;
+    url: string;
+    method: string;
+    // Request Details
+    requestHeaders: string;
+    requestBody: string;
+    contentType: string;
+    // Monitoring Configuration
+    expectedStatusCode: number;
+    responseTimeThreshold: number;
+    monitoringInterval: string;
+    retries: number;
+    alertEmail: string;
+}
+
 export const CreateRouteDialog = ({
     isOpen,
     onOpenChange,
@@ -36,7 +55,9 @@ export const CreateRouteDialog = ({
     onOpenChange: (open: boolean) => void;
 }) => {
     const queryClient = useQueryClient();
-    const [formData, setFormData] = useState({
+
+    // Form state
+    const [formData, setFormData] = useState<RouteFormData>({
         // Basic Information
         name: "",
         description: "",
@@ -57,22 +78,17 @@ export const CreateRouteDialog = ({
     // Track touched fields for validation
     const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
 
-    // URL validation function
+    // Validation functions
     const isValidUrl = (urlString: string): boolean => {
         try {
-            // Check if the URL is empty
             if (!urlString.trim()) return false;
-
-            // Use URL constructor for validation
             const url = new URL(urlString);
-            // Check for http or https protocol
             return url.protocol === 'http:' || url.protocol === 'https:';
         } catch (e) {
             return false;
         }
     };
 
-    // JSON validation function
     const isValidJson = (jsonString: string): boolean => {
         if (!jsonString.trim()) return true; // Empty is valid
         try {
@@ -83,12 +99,11 @@ export const CreateRouteDialog = ({
         }
     };
 
-    // Validate request headers
-    const isValidRequestHeaders = useMemo(() => {
-        return isValidJson(formData.requestHeaders);
-    }, [formData.requestHeaders]);
+    // Derived validation states
+    const isValidRequestHeaders = useMemo(() =>
+        isValidJson(formData.requestHeaders),
+        [formData.requestHeaders]);
 
-    // Validate request body based on content type
     const isValidRequestBody = useMemo(() => {
         // GET requests should not have a request body
         if (formData.method === "GET" && formData.requestBody.trim() !== "") {
@@ -103,30 +118,125 @@ export const CreateRouteDialog = ({
         return true;
     }, [formData.method, formData.requestBody, formData.contentType]);
 
-    // Check if all required fields have values
-    const isFormValid = useMemo(() => {
-        return (
-            formData.name.trim() !== "" &&
-            isValidUrl(formData.url) &&
-            formData.method !== "" &&
-            formData.expectedStatusCode !== undefined &&
-            formData.responseTimeThreshold !== undefined &&
-            formData.monitoringInterval !== "" &&
-            formData.retries !== undefined &&
-            isValidRequestBody &&
-            isValidRequestHeaders
-        );
-    }, [formData, isValidRequestBody, isValidRequestHeaders]);
+    // Overall form validation
+    const isFormValid = useMemo(() => (
+        formData.name.trim() !== "" &&
+        isValidUrl(formData.url) &&
+        formData.method !== "" &&
+        formData.expectedStatusCode !== undefined &&
+        formData.responseTimeThreshold !== undefined &&
+        formData.monitoringInterval !== "" &&
+        formData.retries !== undefined &&
+        isValidRequestBody &&
+        isValidRequestHeaders
+    ), [formData, isValidRequestBody, isValidRequestHeaders]);
 
+    // Event handlers
     const handleChange = (field: string, value: string | number) => {
         setFormData((prev) => ({ ...prev, [field]: value }));
         // Mark the field as touched when user interacts with it
         setTouchedFields((prev) => ({ ...prev, [field]: true }));
     };
 
+    // Function to test the API call before adding the route
+    const testApiCall = useCallback(async () => {
+        if (!isValidUrl(formData.url)) {
+            addToast({
+                title: "Invalid URL",
+                description: "Please enter a valid URL before testing.",
+                color: "danger",
+                variant: "flat",
+            });
+            return;
+        }
+
+        try {
+            addToast({
+                title: "Testing Connection",
+                description: "Making a test request to your API endpoint...",
+                color: "primary",
+                variant: "flat",
+            });
+
+            // Prepare headers
+            let headers: Record<string, string> = {};
+            if (formData.requestHeaders) {
+                try {
+                    headers = JSON.parse(formData.requestHeaders);
+                } catch (e) {
+                    addToast({
+                        title: "Invalid Headers",
+                        description: "Please provide valid JSON for headers.",
+                        color: "danger",
+                        variant: "flat",
+                    });
+                    return;
+                }
+            }
+
+            // Set content type header based on selected content type
+            if (formData.method !== "GET") {
+                headers["Content-Type"] = formData.contentType;
+            }
+
+            // Prepare request options
+            let requestOptions: RequestInit = {
+                method: formData.method,
+                headers,
+                redirect: "follow",
+            };
+
+            // Add body for non-GET requests if provided
+            if (formData.method !== "GET" && formData.requestBody.trim() !== "") {
+                if (formData.contentType === "application/json") {
+                    try {
+                        const parsedBody = JSON.parse(formData.requestBody);
+                        requestOptions.body = JSON.stringify(parsedBody);
+                    } catch (e) {
+                        addToast({
+                            title: "Invalid Request Body",
+                            description: "Please provide valid JSON for request body.",
+                            color: "danger",
+                            variant: "flat",
+                        });
+                        return;
+                    }
+                } else {
+                    requestOptions.body = formData.requestBody;
+                }
+            }
+
+            // Make the test request and measure response time
+            const startTime = Date.now();
+            const response = await fetch(formData.url, requestOptions);
+            const responseTime = Date.now() - startTime;
+
+            // Evaluate success criteria
+            const success = response.status === formData.expectedStatusCode;
+            const timeWithinThreshold = responseTime <= formData.responseTimeThreshold;
+
+            // Show test results
+            addToast({
+                title: success ? "Test Successful" : "Test Failed",
+                description: `Status: ${response.status} (${success ? "✓" : "✗"}) | Response time: ${responseTime}ms (${timeWithinThreshold ? "✓" : "✗"})`,
+                color: success && timeWithinThreshold ? "success" : "warning",
+                variant: "flat",
+            });
+        } catch (error) {
+            console.error("Test API call failed:", error);
+            addToast({
+                title: "Connection Failed",
+                description: "Could not connect to the specified endpoint. Please check URL and network connection.",
+                color: "danger",
+                variant: "flat",
+            });
+        }
+    }, [formData, isValidUrl]);
+
+    // Submit form to create a new route
     const handleSubmit = useCallback(async () => {
+        // Validate form
         if (!isFormValid) {
-            // Determine the specific validation error message
             let errorMessage = "Please fill in all required fields before submitting.";
 
             if (formData.url.trim() !== "" && !isValidUrl(formData.url)) {
@@ -149,9 +259,9 @@ export const CreateRouteDialog = ({
         }
 
         try {
+            // Prepare request body based on content type
             let requestBody;
 
-            // Prepare data based on content type
             if (formData.contentType === "application/json") {
                 // For JSON, send as stringified JSON
                 const dataToSend = {
@@ -195,6 +305,7 @@ export const CreateRouteDialog = ({
                 requestBody = JSON.stringify(formData);
             }
 
+            // Submit the form data to create the route
             const response = await fetch("/api/routes", {
                 method: "POST",
                 body: requestBody,
@@ -203,6 +314,7 @@ export const CreateRouteDialog = ({
                     : {} // No Content-Type for FormData, browser sets it with boundary
             });
 
+            // Handle response
             if (response.ok) {
                 addToast({
                     title: "Successfully created route!",
@@ -232,8 +344,9 @@ export const CreateRouteDialog = ({
                 variant: "flat",
             });
         }
-    }, [formData, queryClient, isFormValid, isValidRequestHeaders, isValidRequestBody, isValidUrl]);
+    }, [formData, queryClient, isFormValid, isValidRequestHeaders, isValidRequestBody, isValidUrl, onOpenChange]);
 
+    // Render component
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
             <DialogTrigger asChild>
@@ -252,9 +365,7 @@ export const CreateRouteDialog = ({
                 <ScrollArea className="max-h-[70vh] pl-4">
                     <div className="py-4 pr-5 space-y-4">
                         {/* Basic Information */}
-                        <Accordion variant="splitted" defaultExpandedKeys={
-                            ["basic-info"]
-                        }>
+                        <Accordion variant="splitted" defaultExpandedKeys={["basic-info"]}>
                             <AccordionItem key="basic-info" title={
                                 <h3 className="font-medium mb-3">
                                     Basic Information
@@ -663,6 +774,14 @@ export const CreateRouteDialog = ({
                         onPress={() => onOpenChange(false)}
                     >
                         Cancel
+                    </Button>
+                    <Button
+                        variant="bordered"
+                        color="secondary"
+                        onPress={testApiCall}
+                        isDisabled={!isValidUrl(formData.url)}
+                    >
+                        Test API
                     </Button>
                     <Button
                         onPress={handleSubmit}
