@@ -138,101 +138,6 @@ export const CreateRouteDialog = ({
         setTouchedFields((prev) => ({ ...prev, [field]: true }));
     };
 
-    // Function to test the API call before adding the route
-    const testApiCall = useCallback(async () => {
-        if (!isValidUrl(formData.url)) {
-            addToast({
-                title: "Invalid URL",
-                description: "Please enter a valid URL before testing.",
-                color: "danger",
-                variant: "flat",
-            });
-            return;
-        }
-
-        try {
-            addToast({
-                title: "Testing Connection",
-                description: "Making a test request to your API endpoint...",
-                color: "primary",
-                variant: "flat",
-            });
-
-            // Prepare headers
-            let headers: Record<string, string> = {};
-            if (formData.requestHeaders) {
-                try {
-                    headers = JSON.parse(formData.requestHeaders);
-                } catch (e) {
-                    addToast({
-                        title: "Invalid Headers",
-                        description: "Please provide valid JSON for headers.",
-                        color: "danger",
-                        variant: "flat",
-                    });
-                    return;
-                }
-            }
-
-            // Set content type header based on selected content type
-            if (formData.method !== "GET") {
-                headers["Content-Type"] = formData.contentType;
-            }
-
-            // Prepare request options
-            let requestOptions: RequestInit = {
-                method: formData.method,
-                headers,
-                redirect: "follow",
-            };
-
-            // Add body for non-GET requests if provided
-            if (formData.method !== "GET" && formData.requestBody.trim() !== "") {
-                if (formData.contentType === "application/json") {
-                    try {
-                        const parsedBody = JSON.parse(formData.requestBody);
-                        requestOptions.body = JSON.stringify(parsedBody);
-                    } catch (e) {
-                        addToast({
-                            title: "Invalid Request Body",
-                            description: "Please provide valid JSON for request body.",
-                            color: "danger",
-                            variant: "flat",
-                        });
-                        return;
-                    }
-                } else {
-                    requestOptions.body = formData.requestBody;
-                }
-            }
-
-            // Make the test request and measure response time
-            const startTime = Date.now();
-            const response = await fetch(formData.url, requestOptions);
-            const responseTime = Date.now() - startTime;
-
-            // Evaluate success criteria
-            const success = response.status === formData.expectedStatusCode;
-            const timeWithinThreshold = responseTime <= formData.responseTimeThreshold;
-
-            // Show test results
-            addToast({
-                title: success ? "Test Successful" : "Test Failed",
-                description: `Status: ${response.status} (${success ? "✓" : "✗"}) | Response time: ${responseTime}ms (${timeWithinThreshold ? "✓" : "✗"})`,
-                color: success && timeWithinThreshold ? "success" : "warning",
-                variant: "flat",
-            });
-        } catch (error) {
-            console.error("Test API call failed:", error);
-            addToast({
-                title: "Connection Failed",
-                description: "Could not connect to the specified endpoint. Please check URL and network connection.",
-                color: "danger",
-                variant: "flat",
-            });
-        }
-    }, [formData, isValidUrl]);
-
     // Submit form to create a new route
     const handleSubmit = useCallback(async () => {
         // Validate form
@@ -774,14 +679,6 @@ export const CreateRouteDialog = ({
                         onPress={() => onOpenChange(false)}
                     >
                         Cancel
-                    </Button>
-                    <Button
-                        variant="bordered"
-                        color="secondary"
-                        onPress={testApiCall}
-                        isDisabled={!isValidUrl(formData.url)}
-                    >
-                        Test API
                     </Button>
                     <Button
                         onPress={handleSubmit}

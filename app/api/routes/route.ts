@@ -41,7 +41,7 @@ export const GET = async (req: NextRequest) => {
         const uptimePercentage =
             logs.length > 0
                 ? (logs.filter((log) => log.isSuccess).length / logs.length) *
-                  100
+                100
                 : 0;
 
         // Calculate status based on uptime percentage
@@ -110,38 +110,198 @@ export const POST = async (req: NextRequest) => {
         monitoringInterval, // Interval for checking the route (seconds).
         retries, // Number of retry attempts on failure.
         alertEmail, // Email for sending alerts if the check fails.
+        testOnly, // If true, only test the route without saving it
+        contentType, // Content-Type header for the request
     } = body;
 
     // Validate required fields
-    if (!name || !url || !expectedStatusCode || !monitoringInterval) {
-        return new Response("Missing required fields", { status: 400 });
+    if (!url || !method) {
+        return new Response(JSON.stringify({ error: "URL and Method are required" }), {
+            status: 400,
+            headers: { "Content-Type": "application/json" }
+        });
     }
-    // Create the route in the database
-    const route = await prisma.route.create({
-        data: {
-            id: crypto.randomUUID(), // Generate a unique ID for the route.
-            method, // HTTP method (GET, POST, etc.).
-            url,
-            name, // Name of the route.
-            description, // Description of the route.
-            requestHeaders: requestHeaders
-                ? JSON.stringify(requestHeaders)
-                : JSON.stringify({}), // Headers to be sent with the request.
-            requestBody: requestBody ? JSON.stringify(requestBody) : null, // Body of the request (for POST, PUT, etc.).
-            expectedStatusCode, // The expected HTTP status code from the route.
-            responseTimeThreshold, // Maximum acceptable response time (ms).
-            monitoringInterval: parseInt(monitoringInterval), // Interval for checking the route  (seconds).
-            retries: retries ? parseInt(retries) : 0, // Number of retry attempts on failure.
-            alertEmail, // Email for sending alerts if the check fails.
-            isActive: true, // Set the route as active by default.
-            userId: user.id, // Associate the route with the authenticated user.
-        },
-    });
 
-    return new Response(JSON.stringify(route), {
-        status: 201,
-        headers: {
-            "Content-Type": "application/json",
-        },
-    });
+    // If testOnly flag is set, we'll just test the route without saving it
+    if (testOnly) {
+        try {
+            // Parse the target URL and perform security checks
+            const targetUrl = new URL(url);
+
+            // Security checks - Block localhost, private IPs, etc.
+            if (
+                // Block localhost and loopback addresses
+                targetUrl.hostname === "localhost" ||
+                targetUrl.hostname === "127.0.0.1" ||
+                /^127\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})$/.test(targetUrl.hostname) ||
+                targetUrl.hostname === "[::1]" ||
+                // Block private IP ranges (IPv4)
+                /^10\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})$/.test(targetUrl.hostname) ||
+                /^172\.(1[6-9]|2[0-9]|3[0-1])\.([0-9]{1,3})\.([0-9]{1,3})$/.test(targetUrl.hostname) ||
+                /^192\.168\.([0-9]{1,3})\.([0-9]{1,3})$/.test(targetUrl.hostname) ||
+                // Block link-local addresses
+                /^169\.254\.([0-9]{1,3})\.([0-9]{1,3})$/.test(targetUrl.hostname) ||
+                // Block internal DNS names
+                /\.(local|internal|private|localhost|corp|home|lan)$/.test(targetUrl.hostname)
+            ) {
+                return new Response(JSON.stringify({
+                    error: "Access denied for security reasons: cannot test with local or private URLs"
+                }), {
+                    status: 403,
+                    headers: { "Content-Type": "application/json" }
+                });
+            }
+
+            // Prepare headers for the request
+            const headers: Record<string, string> = {};
+
+            if (requestHeaders) {
+                const parsedHeaders = typeof requestHeaders === 'string'
+                    ? JSON.parse(requestHeaders)
+                    : requestHeaders;
+
+                // Filter out sensitive headers
+                const forbiddenHeaders = [
+                    "authorization", "proxy-authorization", "cookie", "set-cookie",
+                    "x-csrf", "x-xsrf", "x-api-key", "api-key", "x-functions-key"
+                ];
+
+                for (const key in parsedHeaders) {
+                    if (!forbiddenHeaders.includes(key.toLowerCase()) &&
+                        !key.toLowerCase().startsWith("sec-") &&
+                        !key.toLowerCase().startsWith("proxy-")) {
+                        headers[key] = parsedHeaders[key];
+                    }
+                }
+            }
+
+            // Set content type header based on provided contentType
+            if (method !== "GET" && contentType) {
+                headers["Content-Type"] = contentType;
+            } else if (method !== "GET") {
+                headers["Content-Type"] = "application/json";
+            }
+
+            // Prepare request options
+            const requestOptions: RequestInit = {
+                method,
+                headers,
+                redirect: "follow",
+            };
+
+            // Add body for non-GET requests if provided
+            if (method !== "GET" && requestBody) {
+                if (contentType === "application/json" || !contentType) {
+                    try {
+                        // If it's already a string, parse it to validate it's JSON, then stringify again
+                        const parsedBody = typeof requestBody === 'string' ? JSON.parse(requestBody) : requestBody;
+                        requestOptions.body = JSON.stringify(parsedBody);
+                    } catch (e) {
+                        return new Response(JSON.stringify({
+                            error: "Invalid JSON in request body"
+                        }), {
+                            status: 400,
+                            headers: { "Content-Type": "application/json" }
+                        });
+                    }
+                } else {
+                    // For non-JSON content types, use as is
+                    requestOptions.body = typeof requestBody === 'string' ? requestBody : JSON.stringify(requestBody);
+                }
+            }
+
+            // Measure response time
+            const startTime = performance.now();
+
+            // Make the actual request
+            const response = await fetch(targetUrl, requestOptions);
+
+            const responseTime = performance.now() - startTime;
+            const responseTimeInMs = Math.round(responseTime);
+
+            // Determine if the test passed based on expected status and response time
+            const statusMatch = response.status === (expectedStatusCode || 200);
+            const timeWithinThreshold = !responseTimeThreshold || responseTimeInMs <= responseTimeThreshold;
+            const success = statusMatch && timeWithinThreshold;
+
+            // Return test results
+            return new Response(JSON.stringify({
+                success,
+                url,
+                method,
+                statusCode: response.status,
+                expectedStatusCode: expectedStatusCode || 200,
+                responseTime: responseTimeInMs,
+                responseTimeThreshold,
+                statusMatch,
+                timeWithinThreshold,
+                timestamp: new Date().toISOString()
+            }), {
+                status: 200,
+                headers: { "Content-Type": "application/json" }
+            });
+
+        } catch (error: unknown) {
+            // Handle any errors during testing
+            const errorMessage = error instanceof Error 
+                ? error.message 
+                : 'Unknown error occurred';
+                
+            return new Response(JSON.stringify({
+                error: `Failed to test route: ${errorMessage}`,
+                success: false
+            }), {
+                status: 500,
+                headers: { "Content-Type": "application/json" }
+            });
+        }
+    }
+
+    // For regular route creation (non-test), validate all required fields
+    if (!name || !url || !expectedStatusCode || !monitoringInterval) {
+        return new Response(JSON.stringify({ error: "Missing required fields" }), {
+            status: 400,
+            headers: { "Content-Type": "application/json" }
+        });
+    }
+
+    // Create the route in the database
+    try {
+        const route = await prisma.route.create({
+            data: {
+                id: crypto.randomUUID(), // Generate a unique ID for the route.
+                method, // HTTP method (GET, POST, etc.).
+                url,
+                name, // Name of the route.
+                description, // Description of the route.
+                requestHeaders: requestHeaders
+                    ? JSON.stringify(requestHeaders)
+                    : JSON.stringify({}), // Headers to be sent with the request.
+                requestBody: requestBody ? JSON.stringify(requestBody) : null, // Body of the request (for POST, PUT, etc.).
+                expectedStatusCode, // The expected HTTP status code from the route.
+                responseTimeThreshold, // Maximum acceptable response time (ms).
+                monitoringInterval: parseInt(monitoringInterval), // Interval for checking the route (seconds).
+                retries: retries ? parseInt(retries) : 0, // Number of retry attempts on failure.
+                alertEmail, // Email for sending alerts if the check fails.
+                isActive: true, // Set the route as active by default.
+                userId: user.id, // Associate the route with the authenticated user.
+            },
+        });
+
+        return new Response(JSON.stringify(route), {
+            status: 201,
+            headers: { "Content-Type": "application/json" }
+        });
+    } catch (error: unknown) {
+        const errorMessage = error instanceof Error 
+            ? error.message 
+            : 'Unknown error occurred';
+        
+        return new Response(JSON.stringify({
+            error: `Failed to create route: ${errorMessage}`
+        }), {
+            status: 500,
+            headers: { "Content-Type": "application/json" }
+        });
+    }
 };
