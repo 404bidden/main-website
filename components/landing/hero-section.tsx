@@ -2,11 +2,12 @@
 
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Check } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export function HeroSection() {
     const [isVisible, setIsVisible] = useState(false);
-
+    const router = useRouter()
     useEffect(() => {
         setIsVisible(true);
     }, []);
@@ -57,7 +58,9 @@ export function HeroSection() {
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
-                        <Button size="lg" className="w-full sm:w-auto group">
+                        <Button size="lg" className="w-full sm:w-auto group" onClick={() => {
+                            router.push("/auth/register")
+                        }}>
                             Get Started
                             <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                         </Button>
