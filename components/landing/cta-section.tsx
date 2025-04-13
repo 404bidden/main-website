@@ -44,10 +44,11 @@ export function CtaSection() {
 
             <div className="container mx-auto px-4 flex justify-center">
                 <div
-                    className={`relative z-10 bg-card/50 backdrop-blur-lg border border-border rounded-2xl p-10 md:p-14 max-w-4xl mx-auto transition-all duration-1000 ease-in-out ${isVisible
+                    className={`relative z-10 bg-card/50 backdrop-blur-lg border border-border rounded-2xl p-10 md:p-14 max-w-4xl mx-auto transition-all duration-1000 ease-in-out ${
+                        isVisible
                             ? "opacity-100 translate-y-0"
                             : "opacity-0 translate-y-10"
-                        }`}
+                    }`}
                 >
                     <div className="absolute -top-5 left-1/2 -translate-x-1/2 px-6 py-2 bg-primary text-primary-foreground rounded-full text-sm font-medium">
                         Limited Time Offer
@@ -63,8 +64,8 @@ export function CtaSection() {
                             Your Applications?
                         </h2>
                         <p className="text-xl text-muted-foreground mb-0 max-w-2xl mx-auto">
-                            Join thousands of developers who trust our platform for
-                            reliable application monitoring.
+                            Join thousands of developers who trust our platform
+                            for reliable application monitoring.
                         </p>
                     </div>
 
@@ -73,15 +74,25 @@ export function CtaSection() {
                             <div className="flex items-start">
                                 <CheckCircle className="h-6 w-6 text-primary mr-3 mt-0.5 flex-shrink-0" />
                                 <div>
-                                    <h4 className="font-medium text-foreground">Real-time monitoring</h4>
-                                    <p className="text-sm text-muted-foreground">Monitor your applications 24/7 with real-time insights</p>
+                                    <h4 className="font-medium text-foreground">
+                                        Real-time monitoring
+                                    </h4>
+                                    <p className="text-sm text-muted-foreground">
+                                        Monitor your applications 24/7 with
+                                        real-time insights
+                                    </p>
                                 </div>
                             </div>
                             <div className="flex items-start">
                                 <CheckCircle className="h-6 w-6 text-primary mr-3 mt-0.5 flex-shrink-0" />
                                 <div>
-                                    <h4 className="font-medium text-foreground">Instant alerts</h4>
-                                    <p className="text-sm text-muted-foreground">Get notified immediately when issues are detected</p>
+                                    <h4 className="font-medium text-foreground">
+                                        Instant alerts
+                                    </h4>
+                                    <p className="text-sm text-muted-foreground">
+                                        Get notified immediately when issues are
+                                        detected
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -89,15 +100,25 @@ export function CtaSection() {
                             <div className="flex items-start">
                                 <CheckCircle className="h-6 w-6 text-primary mr-3 mt-0.5 flex-shrink-0" />
                                 <div>
-                                    <h4 className="font-medium text-foreground">Comprehensive dashboard</h4>
-                                    <p className="text-sm text-muted-foreground">View all your metrics in one intuitive dashboard</p>
+                                    <h4 className="font-medium text-foreground">
+                                        Comprehensive dashboard
+                                    </h4>
+                                    <p className="text-sm text-muted-foreground">
+                                        View all your metrics in one intuitive
+                                        dashboard
+                                    </p>
                                 </div>
                             </div>
                             <div className="flex items-start">
                                 <CheckCircle className="h-6 w-6 text-primary mr-3 mt-0.5 flex-shrink-0" />
                                 <div>
-                                    <h4 className="font-medium text-foreground">Developer-friendly</h4>
-                                    <p className="text-sm text-muted-foreground">Easy integration with your tech stack via our API</p>
+                                    <h4 className="font-medium text-foreground">
+                                        Developer-friendly
+                                    </h4>
+                                    <p className="text-sm text-muted-foreground">
+                                        Easy integration with your tech stack
+                                        via our API
+                                    </p>
                                 </div>
                             </div>
                         </div>

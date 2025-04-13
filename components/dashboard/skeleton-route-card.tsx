@@ -1,5 +1,10 @@
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
-import { Skeleton } from "@heroui/skeleton"
+import {
+    Card,
+    CardContent,
+    CardFooter,
+    CardHeader,
+} from "@/components/ui/card";
+import { Skeleton } from "@heroui/skeleton";
 
 export const SkeletonRouteCard = () => (
     <Card className="animate-pulse">
@@ -36,4 +41,4 @@ export const SkeletonRouteCard = () => (
             <Skeleton className="h-9 w-full rounded-md" />
         </CardFooter>
     </Card>
-)
+);

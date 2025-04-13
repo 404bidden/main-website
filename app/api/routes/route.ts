@@ -25,37 +25,40 @@ export const GET = async (req: NextRequest) => {
         include: {
             RequestLog: {
                 orderBy: {
-                    createdAt: 'desc'
+                    createdAt: "desc",
                 },
-                take: 100 // Fetch the last 100 logs to calculate uptime
-            }
-        }
+                take: 100, // Fetch the last 100 logs to calculate uptime
+            },
+        },
     });
 
     // Enhance the route data with metrics
-    const routesWithMetrics = routes.map(route => {
+    const routesWithMetrics = routes.map((route) => {
         const logs = route.RequestLog;
         const lastLog = logs.length > 0 ? logs[0] : null;
 
         // Calculate uptime percentage (successful requests / total requests)
-        const uptimePercentage = logs.length > 0
-            ? (logs.filter(log => log.isSuccess).length / logs.length) * 100
-            : 0;
+        const uptimePercentage =
+            logs.length > 0
+                ? (logs.filter((log) => log.isSuccess).length / logs.length) *
+                  100
+                : 0;
 
         // Calculate status based on uptime percentage
-        let status = 'Not monitored';
+        let status = "Not monitored";
         if (lastLog) {
             // Check for latency issues
-            const hasLatencySpike = lastLog.responseTime && route.responseTimeThreshold
-                ? lastLog.responseTime > route.responseTimeThreshold
-                : false;
+            const hasLatencySpike =
+                lastLog.responseTime && route.responseTimeThreshold
+                    ? lastLog.responseTime > route.responseTimeThreshold
+                    : false;
 
             if (uptimePercentage >= 95) {
-                status = hasLatencySpike ? 'degraded' : 'up';
+                status = hasLatencySpike ? "degraded" : "up";
             } else if (uptimePercentage >= 80) {
-                status = 'degraded';
+                status = "degraded";
             } else {
-                status = 'down';
+                status = "down";
             }
         }
 
@@ -69,11 +72,11 @@ export const GET = async (req: NextRequest) => {
             statusCode: lastLog?.statusCode,
             responseTime: lastLog?.responseTime,
             lastChecked: lastLog?.createdAt || null,
-            uptime: uptimePercentage.toFixed(2) + '%',
+            uptime: uptimePercentage.toFixed(2) + "%",
             expectedStatusCode: route.expectedStatusCode,
             description: route.description,
             isActive: route.isActive,
-            monitoringInterval: route.monitoringInterval
+            monitoringInterval: route.monitoringInterval,
         };
     });
 

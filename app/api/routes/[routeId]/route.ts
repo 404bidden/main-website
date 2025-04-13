@@ -112,4 +112,4 @@ export const PUT = async (
     return new Response(JSON.stringify(result), {
         status: 200,
     });
-}
+};

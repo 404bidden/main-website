@@ -24,13 +24,15 @@ declare module "@react-types/shared" {
 
 export const Providers = ({ children, themeProps }: ProvidersProps) => {
     const router = useRouter();
-    const queryClient = new QueryClient()
+    const queryClient = new QueryClient();
 
     return (
         <QueryClientProvider client={queryClient}>
             <HeroUIProvider navigate={router.push}>
                 <ToastProvider />
-                <NextThemesProvider {...themeProps}>{children}</NextThemesProvider>
+                <NextThemesProvider {...themeProps}>
+                    {children}
+                </NextThemesProvider>
             </HeroUIProvider>
         </QueryClientProvider>
     );

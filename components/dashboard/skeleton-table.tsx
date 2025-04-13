@@ -1,9 +1,16 @@
-import { Skeleton } from "@heroui/skeleton"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Skeleton } from "@heroui/skeleton";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
 
 interface TableSkeletonProps {
-    rowCount?: number
-    columnCount?: number
+    rowCount?: number;
+    columnCount?: number;
 }
 
 export function TableSkeleton({ rowCount = 5 }: TableSkeletonProps) {
@@ -25,7 +32,10 @@ export function TableSkeleton({ rowCount = 5 }: TableSkeletonProps) {
                 {Array(rowCount)
                     .fill(0)
                     .map((_, rowIndex) => (
-                        <TableRow key={rowIndex} className="animate-pulse rounded-lg overflow-hidden">
+                        <TableRow
+                            key={rowIndex}
+                            className="animate-pulse rounded-lg overflow-hidden"
+                        >
                             <TableCell>
                                 <Skeleton className="h-5 w-24 rounded-md" />
                             </TableCell>
@@ -56,5 +66,5 @@ export function TableSkeleton({ rowCount = 5 }: TableSkeletonProps) {
                     ))}
             </TableBody>
         </Table>
-    )
+    );
 }

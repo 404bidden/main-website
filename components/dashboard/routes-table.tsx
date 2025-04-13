@@ -1,5 +1,19 @@
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
 import { RouteWithMetrics } from "@/types";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
@@ -54,10 +68,16 @@ export const RoutesTable = ({ routes }: { routes: RouteWithMetrics[] }) => {
             <TableBody>
                 {routes.map((route) => (
                     <TableRow key={route.id}>
-                        <TableCell className="font-medium">{route.name}</TableCell>
-                        <TableCell className="font-mono text-sm truncate max-w-[200px]">{route.url}</TableCell>
+                        <TableCell className="font-medium">
+                            {route.name}
+                        </TableCell>
+                        <TableCell className="font-mono text-sm truncate max-w-[200px]">
+                            {route.url}
+                        </TableCell>
                         <TableCell>
-                            <Chip color="secondary" variant="dot">{route.method}</Chip>
+                            <Chip color="secondary" variant="dot">
+                                {route.method}
+                            </Chip>
                         </TableCell>
                         <TableCell>
                             <StatusBadge status={route.status} />
@@ -69,51 +89,75 @@ export const RoutesTable = ({ routes }: { routes: RouteWithMetrics[] }) => {
                         </TableCell>
                         <TableCell>
                             {route.lastChecked
-                                ? formatDistanceToNow(route.lastChecked, { addSuffix: true })
+                                ? formatDistanceToNow(route.lastChecked, {
+                                      addSuffix: true,
+                                  })
                                 : "Never checked"}
                         </TableCell>
                         <TableCell>{route.uptime}</TableCell>
                         <TableCell className="text-right">
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" className="h-8 w-8 p-0">
-                                        <span className="sr-only">Open menu</span>
+                                    <Button
+                                        variant="ghost"
+                                        className="h-8 w-8 p-0"
+                                    >
+                                        <span className="sr-only">
+                                            Open menu
+                                        </span>
                                         <MoreHorizontal className="h-4 w-4" />
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                    <DropdownMenuItem>View Details</DropdownMenuItem>
-                                    <DropdownMenuItem>Edit Route</DropdownMenuItem>
+                                    <DropdownMenuLabel>
+                                        Actions
+                                    </DropdownMenuLabel>
+                                    <DropdownMenuItem>
+                                        View Details
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem>
+                                        Edit Route
+                                    </DropdownMenuItem>
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuItem onClick={async () => {
-                                        const response = await fetch(`/api/routes/${route.id}/run`, {
-                                            method: "POST",
-                                        })
-                                        if (response.ok) {
-                                            addToast({
-                                                title: "Route checked successfully!",
-                                                description: "The route has been checked.",
-                                                color: "success",
-                                                variant: "flat",
-                                            });
-                                            queryClient.invalidateQueries({
-                                                queryKey: ["routes"],
-                                            });
-
-                                        } else {
-                                            addToast({
-                                                title: "Error checking route",
-                                                description: "There was an error checking the route.",
-                                                color: "danger",
-                                                variant: "flat",
-                                            });
-                                        }
-
-                                    }}>Check Now</DropdownMenuItem>
-                                    <DropdownMenuItem>Pause Monitoring</DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        onClick={async () => {
+                                            const response = await fetch(
+                                                `/api/routes/${route.id}/run`,
+                                                {
+                                                    method: "POST",
+                                                },
+                                            );
+                                            if (response.ok) {
+                                                addToast({
+                                                    title: "Route checked successfully!",
+                                                    description:
+                                                        "The route has been checked.",
+                                                    color: "success",
+                                                    variant: "flat",
+                                                });
+                                                queryClient.invalidateQueries({
+                                                    queryKey: ["routes"],
+                                                });
+                                            } else {
+                                                addToast({
+                                                    title: "Error checking route",
+                                                    description:
+                                                        "There was an error checking the route.",
+                                                    color: "danger",
+                                                    variant: "flat",
+                                                });
+                                            }
+                                        }}
+                                    >
+                                        Check Now
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem>
+                                        Pause Monitoring
+                                    </DropdownMenuItem>
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuItem className="text-red-600">Delete Route</DropdownMenuItem>
+                                    <DropdownMenuItem className="text-red-600">
+                                        Delete Route
+                                    </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </TableCell>
@@ -121,5 +165,5 @@ export const RoutesTable = ({ routes }: { routes: RouteWithMetrics[] }) => {
                 ))}
             </TableBody>
         </Table>
-    )
-}
+    );
+};

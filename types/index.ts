@@ -4,13 +4,12 @@ export type IconSvgProps = SVGProps<SVGSVGElement> & {
     size?: number;
 };
 
-
 export type RouteWithMetrics = {
     id: string;
     name: string;
     url: string;
     method: string;
-    status: 'up' | 'down' | 'degraded' | 'Not monitored';
+    status: "up" | "down" | "degraded" | "Not monitored";
     statusCode?: number;
     responseTime?: number;
     lastChecked: Date | null;

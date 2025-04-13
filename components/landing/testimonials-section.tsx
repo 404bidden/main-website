@@ -35,21 +35,21 @@ export function TestimonialsSection() {
             name: "Sarah Johnson",
             role: "CTO, TechStart Inc.",
             avatar: "/avatars/avatar-1.png",
-            initials: "SJ"
+            initials: "SJ",
         },
         {
             quote: "The instant alerts have saved us countless hours of troubleshooting. We know exactly when and where issues occur before our users do.",
             name: "Michael Chen",
             role: "Lead DevOps Engineer, DataFlow",
             avatar: "/avatars/avatar-2.png",
-            initials: "MC"
+            initials: "MC",
         },
         {
             quote: "Setting up 404bidden took minutes, not days. The intuitive interface makes monitoring our complex architecture simple and effective.",
             name: "Alex Rivera",
             role: "Software Architect, CloudNative",
             avatar: "/avatars/avatar-3.png",
-            initials: "AR"
+            initials: "AR",
         },
     ];
 
@@ -73,13 +73,16 @@ export function TestimonialsSection() {
                         <span className="text-primary">Testimonials</span>
                     </div>
                     <h2 className="text-3xl md:text-5xl font-bold tracking-tighter mb-6 text-foreground">
-                        Trusted by <span className="text-primary relative inline-block">
+                        Trusted by{" "}
+                        <span className="text-primary relative inline-block">
                             Developers
                             <span className="absolute bottom-1 left-0 w-full h-[8px] bg-primary/20 -z-10 rounded"></span>
-                        </span> Worldwide
+                        </span>{" "}
+                        Worldwide
                     </h2>
                     <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                        See what our users have to say about their experience with our platform
+                        See what our users have to say about their experience
+                        with our platform
                     </p>
                 </div>
 
@@ -87,25 +90,37 @@ export function TestimonialsSection() {
                     {testimonials.map((testimonial, index) => (
                         <div
                             key={index}
-                            className={`group relative transition-all duration-700 ease-in-out ${isVisible
+                            className={`group relative transition-all duration-700 ease-in-out ${
+                                isVisible
                                     ? "opacity-100 translate-y-0"
                                     : "opacity-0 translate-y-10"
-                                }`}
+                            }`}
                             style={{ transitionDelay: `${index * 150}ms` }}
                         >
                             <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/10 to-primary/30 rounded-2xl blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
                             <Card className="relative bg-card/80 backdrop-blur-sm border border-border h-full">
                                 <CardContent className="p-8">
                                     <Quote className="h-10 w-10 text-primary/40 mb-6" />
-                                    <p className="text-foreground mb-8 text-lg italic">"{testimonial.quote}"</p>
+                                    <p className="text-foreground mb-8 text-lg italic">
+                                        "{testimonial.quote}"
+                                    </p>
                                     <div className="flex items-center">
                                         <Avatar className="h-12 w-12 mr-4 border-2 border-primary/20">
-                                            <AvatarImage src={testimonial.avatar} alt={testimonial.name} />
-                                            <AvatarFallback className="bg-primary/10 text-primary">{testimonial.initials}</AvatarFallback>
+                                            <AvatarImage
+                                                src={testimonial.avatar}
+                                                alt={testimonial.name}
+                                            />
+                                            <AvatarFallback className="bg-primary/10 text-primary">
+                                                {testimonial.initials}
+                                            </AvatarFallback>
                                         </Avatar>
                                         <div>
-                                            <p className="font-semibold text-foreground">{testimonial.name}</p>
-                                            <p className="text-sm text-muted-foreground">{testimonial.role}</p>
+                                            <p className="font-semibold text-foreground">
+                                                {testimonial.name}
+                                            </p>
+                                            <p className="text-sm text-muted-foreground">
+                                                {testimonial.role}
+                                            </p>
                                         </div>
                                     </div>
                                 </CardContent>

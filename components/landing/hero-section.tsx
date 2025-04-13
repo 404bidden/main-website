@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 
 export function HeroSection() {
     const [isVisible, setIsVisible] = useState(false);
-    const router = useRouter()
+    const router = useRouter();
     useEffect(() => {
         setIsVisible(true);
     }, []);
@@ -21,14 +21,35 @@ export function HeroSection() {
                 <div className="absolute top-[20%] left-[15%] w-[40%] h-[40%] rounded-full opacity-20 blur-3xl bg-primary/20 animate-blob animation-delay-4000"></div>
 
                 <div className="absolute top-0 left-0 w-full h-full opacity-[0.05] [mask-image:radial-gradient(farthest-side_at_top,white,transparent)]">
-                    <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                    <svg
+                        className="w-full h-full"
+                        xmlns="http://www.w3.org/2000/svg"
+                    >
                         <defs>
-                            <pattern id="grid-pattern" width="32" height="32" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-                                <rect width="1" height="32" fill="currentColor" />
-                                <rect height="1" width="32" fill="currentColor" />
+                            <pattern
+                                id="grid-pattern"
+                                width="32"
+                                height="32"
+                                patternUnits="userSpaceOnUse"
+                                patternTransform="rotate(45)"
+                            >
+                                <rect
+                                    width="1"
+                                    height="32"
+                                    fill="currentColor"
+                                />
+                                <rect
+                                    height="1"
+                                    width="32"
+                                    fill="currentColor"
+                                />
                             </pattern>
                         </defs>
-                        <rect width="100%" height="100%" fill="url(#grid-pattern)" />
+                        <rect
+                            width="100%"
+                            height="100%"
+                            fill="url(#grid-pattern)"
+                        />
                     </svg>
                 </div>
             </div>
@@ -41,7 +62,9 @@ export function HeroSection() {
                     <div className="inline-flex items-center justify-center px-4 py-1.5 mb-6 text-sm font-medium rounded-full border border-border bg-background/80 backdrop-blur-sm">
                         <span className="text-primary font-semibold">New</span>
                         <span className="mx-2">•</span>
-                        <span className="text-foreground/80">Launching April 2025</span>
+                        <span className="text-foreground/80">
+                            Launching April 2025
+                        </span>
                     </div>
 
                     <h1 className="text-4xl md:text-6xl font-bold tracking-tighter mb-6 text-foreground">
@@ -58,9 +81,13 @@ export function HeroSection() {
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
-                        <Button size="lg" className="w-full sm:w-auto group" onClick={() => {
-                            router.push("/auth/register")
-                        }}>
+                        <Button
+                            size="lg"
+                            className="w-full sm:w-auto group"
+                            onClick={() => {
+                                router.push("/auth/register");
+                            }}
+                        >
                             Get Started
                             <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                         </Button>

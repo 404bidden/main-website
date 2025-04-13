@@ -95,7 +95,8 @@ export function FeaturesSection() {
                     </h2>
                     <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
                         Everything you need to ensure your applications are
-                        running smoothly, with alerts that matter and insights that drive action.
+                        running smoothly, with alerts that matter and insights
+                        that drive action.
                     </p>
                 </div>
 
@@ -103,10 +104,11 @@ export function FeaturesSection() {
                     {features.map((feature, index) => (
                         <div
                             key={index}
-                            className={`group relative transition-all duration-700 ease-in-out ${isVisible
+                            className={`group relative transition-all duration-700 ease-in-out ${
+                                isVisible
                                     ? "opacity-100 translate-y-0"
                                     : "opacity-0 translate-y-10"
-                                }`}
+                            }`}
                             style={{ transitionDelay: `${index * 100}ms` }}
                         >
                             <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/10 to-primary/30 rounded-lg blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
