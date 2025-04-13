@@ -45,6 +45,7 @@ export const CreateRouteDialog = ({
         // Request Details
         requestHeaders: "",
         requestBody: "",
+        contentType: "application/json", // Default content type
         // Monitoring Configuration
         expectedStatusCode: 200,
         responseTimeThreshold: 500,
@@ -53,51 +54,185 @@ export const CreateRouteDialog = ({
         alertEmail: "",
     });
 
+    // Track touched fields for validation
+    const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
+
+    // URL validation function
+    const isValidUrl = (urlString: string): boolean => {
+        try {
+            // Check if the URL is empty
+            if (!urlString.trim()) return false;
+
+            // Use URL constructor for validation
+            const url = new URL(urlString);
+            // Check for http or https protocol
+            return url.protocol === 'http:' || url.protocol === 'https:';
+        } catch (e) {
+            return false;
+        }
+    };
+
+    // JSON validation function
+    const isValidJson = (jsonString: string): boolean => {
+        if (!jsonString.trim()) return true; // Empty is valid
+        try {
+            JSON.parse(jsonString);
+            return true;
+        } catch (e) {
+            return false;
+        }
+    };
+
+    // Validate request headers
+    const isValidRequestHeaders = useMemo(() => {
+        return isValidJson(formData.requestHeaders);
+    }, [formData.requestHeaders]);
+
+    // Validate request body based on content type
+    const isValidRequestBody = useMemo(() => {
+        // GET requests should not have a request body
+        if (formData.method === "GET" && formData.requestBody.trim() !== "") {
+            return false;
+        }
+
+        // For JSON content type, validate JSON format
+        if (formData.contentType === "application/json" && formData.requestBody.trim() !== "") {
+            return isValidJson(formData.requestBody);
+        }
+
+        return true;
+    }, [formData.method, formData.requestBody, formData.contentType]);
+
     // Check if all required fields have values
     const isFormValid = useMemo(() => {
         return (
             formData.name.trim() !== "" &&
-            formData.url.trim() !== "" &&
+            isValidUrl(formData.url) &&
             formData.method !== "" &&
             formData.expectedStatusCode !== undefined &&
             formData.responseTimeThreshold !== undefined &&
             formData.monitoringInterval !== "" &&
-            formData.retries !== undefined
+            formData.retries !== undefined &&
+            isValidRequestBody &&
+            isValidRequestHeaders
         );
-    }, [formData]);
+    }, [formData, isValidRequestBody, isValidRequestHeaders]);
 
     const handleChange = (field: string, value: string | number) => {
         setFormData((prev) => ({ ...prev, [field]: value }));
+        // Mark the field as touched when user interacts with it
+        setTouchedFields((prev) => ({ ...prev, [field]: true }));
     };
+
     const handleSubmit = useCallback(async () => {
         if (!isFormValid) {
+            // Determine the specific validation error message
+            let errorMessage = "Please fill in all required fields before submitting.";
+
+            if (formData.url.trim() !== "" && !isValidUrl(formData.url)) {
+                errorMessage = "Please enter a valid URL (e.g., https://example.com)";
+            } else if (formData.method === "GET" && formData.requestBody.trim() !== "") {
+                errorMessage = "GET requests cannot have a request body";
+            } else if (!isValidRequestHeaders && formData.requestHeaders.trim() !== "") {
+                errorMessage = "Request headers must be valid JSON";
+            } else if (!isValidRequestBody && formData.requestBody.trim() !== "" && formData.contentType === "application/json") {
+                errorMessage = "Request body must be valid JSON for application/json content type";
+            }
+
             addToast({
-                title: "Missing required fields",
-                description: "Please fill in all required fields before submitting.",
+                title: "Validation Error",
+                description: errorMessage,
                 color: "danger",
                 variant: "flat",
             });
             return;
         }
 
-        console.log("Submitting form data:", formData);
-        const response = await fetch("/api/routes", {
-            method: "POST",
-            body: JSON.stringify(formData),
-        });
-        if (response.ok) {
+        try {
+            let requestBody;
+
+            // Prepare data based on content type
+            if (formData.contentType === "application/json") {
+                // For JSON, send as stringified JSON
+                const dataToSend = {
+                    ...formData,
+                    headers: formData.requestHeaders ? JSON.parse(formData.requestHeaders) : {},
+                    body: formData.requestBody ? JSON.parse(formData.requestBody) : null,
+                };
+                requestBody = JSON.stringify(dataToSend);
+            } else if (formData.contentType === "multipart/form-data") {
+                // For form data, create a FormData object
+                const formDataObj = new FormData();
+                Object.entries(formData).forEach(([key, value]) => {
+                    if (key !== 'requestBody' && key !== 'requestHeaders') {
+                        formDataObj.append(key, String(value));
+                    }
+                });
+
+                // Handle request headers (still as JSON)
+                if (formData.requestHeaders) {
+                    formDataObj.append('headers', formData.requestHeaders);
+                }
+
+                // Handle request body based on content (if it's form data format)
+                if (formData.requestBody && formData.method !== "GET") {
+                    try {
+                        // Try to parse as JSON in case it's a structured object
+                        const bodyObj = JSON.parse(formData.requestBody);
+                        // Add each field of the parsed JSON as a form field
+                        Object.entries(bodyObj).forEach(([key, value]) => {
+                            formDataObj.append(key, String(value));
+                        });
+                    } catch (e) {
+                        // If not valid JSON, add as a single body field
+                        formDataObj.append('body', formData.requestBody);
+                    }
+                }
+
+                requestBody = formDataObj;
+            } else {
+                // Default to JSON for other content types
+                requestBody = JSON.stringify(formData);
+            }
+
+            const response = await fetch("/api/routes", {
+                method: "POST",
+                body: requestBody,
+                headers: formData.contentType === "application/json"
+                    ? { "Content-Type": "application/json" }
+                    : {} // No Content-Type for FormData, browser sets it with boundary
+            });
+
+            if (response.ok) {
+                addToast({
+                    title: "Successfully created route!",
+                    description: "Your route has been successfully created.",
+                    color: "success",
+                    variant: "flat",
+                });
+                onOpenChange(false);
+                queryClient.invalidateQueries({
+                    queryKey: ["routes"],
+                });
+            } else {
+                const errorData = await response.json().catch(() => ({ message: "Unknown error occurred" }));
+                addToast({
+                    title: "Failed to create route",
+                    description: errorData.message || `Error: ${response.status}`,
+                    color: "danger",
+                    variant: "flat",
+                });
+            }
+        } catch (error) {
+            console.error("Error submitting form:", error);
             addToast({
-                title: "Successfully created route!",
-                description: "Your route has been successfully created.",
-                color: "success",
+                title: "Error",
+                description: "An unexpected error occurred while submitting the form.",
+                color: "danger",
                 variant: "flat",
             });
-            onOpenChange(false);
-            queryClient.invalidateQueries({
-                queryKey: ["routes"],
-            });
         }
-    }, [formData, queryClient, isFormValid]);
+    }, [formData, queryClient, isFormValid, isValidRequestHeaders, isValidRequestBody, isValidUrl]);
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -174,17 +309,24 @@ export const CreateRouteDialog = ({
                                             >
                                                 URL
                                             </Label>
-                                            <Input
-                                                isRequired
-                                                variant="bordered"
-                                                id="url"
-                                                placeholder="https://api.example.com/auth"
-                                                className="col-span-3"
-                                                value={formData.url}
-                                                onValueChange={(value) =>
-                                                    handleChange("url", value)
-                                                }
-                                            />
+                                            <div className="col-span-3 space-y-1">
+                                                <Input
+                                                    isRequired
+                                                    variant="bordered"
+                                                    id="url"
+                                                    placeholder="https://api.example.com/auth"
+                                                    className="w-full"
+                                                    value={formData.url}
+                                                    onValueChange={(value) =>
+                                                        handleChange("url", value)
+                                                    }
+                                                    isInvalid={touchedFields.url && !isValidUrl(formData.url)}
+                                                    color={touchedFields.url && !isValidUrl(formData.url) ? "danger" : undefined}
+                                                />
+                                                {touchedFields.url && !isValidUrl(formData.url) && (
+                                                    <p className="text-danger text-xs">Please enter a valid URL (e.g., https://example.com)</p>
+                                                )}
+                                            </div>
                                         </div>
                                         <div className="grid grid-cols-4 items-center gap-4">
                                             <Label
@@ -241,24 +383,63 @@ export const CreateRouteDialog = ({
                                     <div className="space-y-4">
                                         <div className="grid grid-cols-4 items-center gap-4">
                                             <Label
+                                                htmlFor="contentType"
+                                                className="text-right"
+                                            >
+                                                Content Type
+                                            </Label>
+                                            <Select
+                                                value={formData.contentType}
+                                                onValueChange={(value) =>
+                                                    handleChange(
+                                                        "contentType",
+                                                        value,
+                                                    )
+                                                }
+                                            >
+                                                <SelectTrigger className="col-span-3">
+                                                    <SelectValue placeholder="application/json" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="application/json">
+                                                        JSON (application/json)
+                                                    </SelectItem>
+                                                    <SelectItem value="multipart/form-data">
+                                                        Form Data (multipart/form-data)
+                                                    </SelectItem>
+                                                    <SelectItem value="application/x-www-form-urlencoded">
+                                                        URL Encoded (application/x-www-form-urlencoded)
+                                                    </SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="grid grid-cols-4 items-center gap-4">
+                                            <Label
                                                 htmlFor="requestHeaders"
                                                 className="text-right"
                                             >
                                                 Request Headers
                                             </Label>
-                                            <Input
-                                                variant="bordered"
-                                                id="requestHeaders"
-                                                placeholder='{"Content-Type": "application/json"}'
-                                                className="col-span-3"
-                                                value={formData.requestHeaders}
-                                                onValueChange={(value) =>
-                                                    handleChange(
-                                                        "requestHeaders",
-                                                        value,
-                                                    )
-                                                }
-                                            />
+                                            <div className="col-span-3 space-y-1">
+                                                <Input
+                                                    variant="bordered"
+                                                    id="requestHeaders"
+                                                    placeholder='{"Content-Type": "application/json"}'
+                                                    className="w-full"
+                                                    value={formData.requestHeaders}
+                                                    onValueChange={(value) =>
+                                                        handleChange(
+                                                            "requestHeaders",
+                                                            value,
+                                                        )
+                                                    }
+                                                    isInvalid={touchedFields.requestHeaders && !isValidRequestHeaders}
+                                                    color={touchedFields.requestHeaders && !isValidRequestHeaders ? "danger" : undefined}
+                                                />
+                                                {touchedFields.requestHeaders && !isValidRequestHeaders && (
+                                                    <p className="text-danger text-xs">Headers must be in valid JSON format</p>
+                                                )}
+                                            </div>
                                         </div>
                                         <div className="grid grid-cols-4 items-center gap-4">
                                             <Label
@@ -267,19 +448,52 @@ export const CreateRouteDialog = ({
                                             >
                                                 Request Body
                                             </Label>
-                                            <Input
-                                                variant="bordered"
-                                                id="requestBody"
-                                                placeholder='{"username": "test", "password": "test"}'
-                                                className="col-span-3"
-                                                value={formData.requestBody}
-                                                onValueChange={(value) =>
-                                                    handleChange(
-                                                        "requestBody",
-                                                        value,
-                                                    )
-                                                }
-                                            />
+                                            <div className="col-span-3 space-y-1">
+                                                <Input
+                                                    variant="bordered"
+                                                    id="requestBody"
+                                                    placeholder={formData.contentType === "application/json" ?
+                                                        '{"username": "test", "password": "test"}' :
+                                                        'username=test&password=test'}
+                                                    className="w-full"
+                                                    value={formData.requestBody}
+                                                    onValueChange={(value) =>
+                                                        handleChange(
+                                                            "requestBody",
+                                                            value,
+                                                        )
+                                                    }
+                                                    isDisabled={formData.method === "GET"}
+                                                    isInvalid={(formData.method === "GET" && formData.requestBody.trim() !== "") ||
+                                                        (formData.contentType === "application/json" &&
+                                                            formData.requestBody.trim() !== "" &&
+                                                            !isValidJson(formData.requestBody))}
+                                                    color={(formData.method === "GET" && formData.requestBody.trim() !== "") ||
+                                                        (formData.contentType === "application/json" &&
+                                                            formData.requestBody.trim() !== "" &&
+                                                            !isValidJson(formData.requestBody)) ? "danger" : undefined}
+                                                />
+                                                {formData.method === "GET" && formData.requestBody.trim() !== "" && (
+                                                    <p className="text-danger text-xs">GET requests cannot have a request body</p>
+                                                )}
+                                                {formData.method === "GET" && (
+                                                    <p className="text-default-400 text-xs">Request body is disabled for GET requests</p>
+                                                )}
+                                                {formData.method !== "GET" && formData.contentType === "application/json" &&
+                                                    formData.requestBody.trim() !== "" && !isValidJson(formData.requestBody) && (
+                                                        <p className="text-danger text-xs">Request body must be valid JSON</p>
+                                                    )}
+                                                {formData.method !== "GET" && formData.contentType === "multipart/form-data" && (
+                                                    <p className="text-default-400 text-xs">
+                                                        For form data, you can enter key-value pairs in JSON format or plain text
+                                                    </p>
+                                                )}
+                                                {formData.method !== "GET" && formData.contentType === "application/x-www-form-urlencoded" && (
+                                                    <p className="text-default-400 text-xs">
+                                                        For URL encoded data, use format: key1=value1&key2=value2
+                                                    </p>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
