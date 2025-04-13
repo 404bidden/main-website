@@ -18,7 +18,12 @@ const config = {
                 md: "calc(var(--radius) - 2px)",
                 sm: "calc(var(--radius) - 4px)",
             },
-            colors: {},
+            colors: {
+                border: {
+                    DEFAULT: "hsl(var(--border))",
+                    hover: "hsl(var(--border-hover))",
+                },
+            },
         },
     },
     darkMode: "class",

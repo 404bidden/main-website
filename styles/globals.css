@@ -1,8 +1,52 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 @layer base {
     :root {
         --radius: 0.5rem;
+
+        --border: 210 40% 90%;
+        --border-hover: 210 40% 85%;
+
+        --primary-rgb: 10 134 219;
+        /* Approximated RGB values for primary color */
     }
+
+    .dark {
+        --border: 217 19% 27%;
+        --border-hover: 217 19% 32%;
+    }
+}
+
+@layer utilities {
+    .animation-delay-2000 {
+        animation-delay: 2s;
+    }
+
+    .animation-delay-4000 {
+        animation-delay: 4s;
+    }
+}
+
+@keyframes blob {
+    0% {
+        transform: translate(0px, 0px) scale(1);
+    }
+
+    33% {
+        transform: translate(30px, -50px) scale(1.1);
+    }
+
+    66% {
+        transform: translate(-20px, 20px) scale(0.9);
+    }
+
+    100% {
+        transform: translate(0px, 0px) scale(1);
+    }
+}
+
+.animate-blob {
+    animation: blob 15s infinite alternate;
 }
