@@ -47,6 +47,24 @@ interface RouteFormData {
     alertEmail: string;
 }
 
+const DEFAULT_FORM_DATA: RouteFormData = {
+    // Basic Information
+    name: "",
+    description: "",
+    url: "",
+    method: "GET",
+    // Request Details
+    requestHeaders: "",
+    requestBody: "",
+    contentType: "application/json", // Default content type
+    // Monitoring Configuration
+    expectedStatusCode: 200,
+    responseTimeThreshold: 500,
+    monitoringInterval: "300",
+    retries: 3,
+    alertEmail: "",
+}
+
 export const CreateRouteDialog = ({
     isOpen,
     onOpenChange,
@@ -57,23 +75,7 @@ export const CreateRouteDialog = ({
     const queryClient = useQueryClient();
 
     // Form state
-    const [formData, setFormData] = useState<RouteFormData>({
-        // Basic Information
-        name: "",
-        description: "",
-        url: "",
-        method: "GET",
-        // Request Details
-        requestHeaders: "",
-        requestBody: "",
-        contentType: "application/json", // Default content type
-        // Monitoring Configuration
-        expectedStatusCode: 200,
-        responseTimeThreshold: 500,
-        monitoringInterval: "300",
-        retries: 3,
-        alertEmail: "",
-    });
+    const [formData, setFormData] = useState<RouteFormData>(DEFAULT_FORM_DATA);
 
     // Track touched fields for validation
     const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
@@ -228,6 +230,8 @@ export const CreateRouteDialog = ({
                     variant: "flat",
                 });
                 onOpenChange(false);
+                // Reset form data
+                setFormData(DEFAULT_FORM_DATA);
             } else {
                 const errorData = await response.json().catch(() => ({ message: "Unknown error occurred" }));
                 addToast({
