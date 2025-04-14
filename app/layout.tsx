@@ -2,10 +2,8 @@ import "@/styles/globals.css";
 import clsx from "clsx";
 import { Metadata, Viewport } from "next";
 
-import { Navbar } from "@/components/navbar";
 import { fontSans } from "@/config/fonts";
 import { siteConfig } from "@/config/site";
-import { Link } from "@heroui/link";
 
 import { Providers } from "./providers";
 
@@ -45,7 +43,6 @@ export default function RootLayout({
                     themeProps={{ attribute: "class", defaultTheme: "dark" }}
                 >
                     <div className="flex flex-col">
-                        <Navbar />
                         <main className="grow">{children}</main>
                     </div>
                 </Providers>
