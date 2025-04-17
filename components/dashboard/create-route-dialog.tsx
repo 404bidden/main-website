@@ -63,7 +63,7 @@ const DEFAULT_FORM_DATA: RouteFormData = {
     monitoringInterval: "300",
     retries: 3,
     alertEmail: "",
-}
+};
 
 export const CreateRouteDialog = ({
     isOpen,
@@ -78,14 +78,16 @@ export const CreateRouteDialog = ({
     const [formData, setFormData] = useState<RouteFormData>(DEFAULT_FORM_DATA);
 
     // Track touched fields for validation
-    const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
+    const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>(
+        {},
+    );
 
     // Validation functions
     const isValidUrl = (urlString: string): boolean => {
         try {
             if (!urlString.trim()) return false;
             const url = new URL(urlString);
-            return url.protocol === 'http:' || url.protocol === 'https:';
+            return url.protocol === "http:" || url.protocol === "https:";
         } catch (e) {
             return false;
         }
@@ -102,9 +104,10 @@ export const CreateRouteDialog = ({
     };
 
     // Derived validation states
-    const isValidRequestHeaders = useMemo(() =>
-        isValidJson(formData.requestHeaders),
-        [formData.requestHeaders]);
+    const isValidRequestHeaders = useMemo(
+        () => isValidJson(formData.requestHeaders),
+        [formData.requestHeaders],
+    );
 
     const isValidRequestBody = useMemo(() => {
         // GET requests should not have a request body
@@ -113,7 +116,10 @@ export const CreateRouteDialog = ({
         }
 
         // For JSON content type, validate JSON format
-        if (formData.contentType === "application/json" && formData.requestBody.trim() !== "") {
+        if (
+            formData.contentType === "application/json" &&
+            formData.requestBody.trim() !== ""
+        ) {
             return isValidJson(formData.requestBody);
         }
 
@@ -121,17 +127,19 @@ export const CreateRouteDialog = ({
     }, [formData.method, formData.requestBody, formData.contentType]);
 
     // Overall form validation
-    const isFormValid = useMemo(() => (
-        formData.name.trim() !== "" &&
-        isValidUrl(formData.url) &&
-        formData.method !== "" &&
-        formData.expectedStatusCode !== undefined &&
-        formData.responseTimeThreshold !== undefined &&
-        formData.monitoringInterval !== "" &&
-        formData.retries !== undefined &&
-        isValidRequestBody &&
-        isValidRequestHeaders
-    ), [formData, isValidRequestBody, isValidRequestHeaders]);
+    const isFormValid = useMemo(
+        () =>
+            formData.name.trim() !== "" &&
+            isValidUrl(formData.url) &&
+            formData.method !== "" &&
+            formData.expectedStatusCode !== undefined &&
+            formData.responseTimeThreshold !== undefined &&
+            formData.monitoringInterval !== "" &&
+            formData.retries !== undefined &&
+            isValidRequestBody &&
+            isValidRequestHeaders,
+        [formData, isValidRequestBody, isValidRequestHeaders],
+    );
 
     // Event handlers
     const handleChange = (field: string, value: string | number) => {
@@ -144,16 +152,29 @@ export const CreateRouteDialog = ({
     const handleSubmit = useCallback(async () => {
         // Validate form
         if (!isFormValid) {
-            let errorMessage = "Please fill in all required fields before submitting.";
+            let errorMessage =
+                "Please fill in all required fields before submitting.";
 
             if (formData.url.trim() !== "" && !isValidUrl(formData.url)) {
-                errorMessage = "Please enter a valid URL (e.g., https://example.com)";
-            } else if (formData.method === "GET" && formData.requestBody.trim() !== "") {
+                errorMessage =
+                    "Please enter a valid URL (e.g., https://example.com)";
+            } else if (
+                formData.method === "GET" &&
+                formData.requestBody.trim() !== ""
+            ) {
                 errorMessage = "GET requests cannot have a request body";
-            } else if (!isValidRequestHeaders && formData.requestHeaders.trim() !== "") {
+            } else if (
+                !isValidRequestHeaders &&
+                formData.requestHeaders.trim() !== ""
+            ) {
                 errorMessage = "Request headers must be valid JSON";
-            } else if (!isValidRequestBody && formData.requestBody.trim() !== "" && formData.contentType === "application/json") {
-                errorMessage = "Request body must be valid JSON for application/json content type";
+            } else if (
+                !isValidRequestBody &&
+                formData.requestBody.trim() !== "" &&
+                formData.contentType === "application/json"
+            ) {
+                errorMessage =
+                    "Request body must be valid JSON for application/json content type";
             }
 
             addToast({
@@ -173,22 +194,26 @@ export const CreateRouteDialog = ({
                 // For JSON, send as stringified JSON
                 const dataToSend = {
                     ...formData,
-                    headers: formData.requestHeaders ? JSON.parse(formData.requestHeaders) : {},
-                    body: formData.requestBody ? JSON.parse(formData.requestBody) : null,
+                    headers: formData.requestHeaders
+                        ? JSON.parse(formData.requestHeaders)
+                        : {},
+                    body: formData.requestBody
+                        ? JSON.parse(formData.requestBody)
+                        : null,
                 };
                 requestBody = JSON.stringify(dataToSend);
             } else if (formData.contentType === "multipart/form-data") {
                 // For form data, create a FormData object
                 const formDataObj = new FormData();
                 Object.entries(formData).forEach(([key, value]) => {
-                    if (key !== 'requestBody' && key !== 'requestHeaders') {
+                    if (key !== "requestBody" && key !== "requestHeaders") {
                         formDataObj.append(key, String(value));
                     }
                 });
 
                 // Handle request headers (still as JSON)
                 if (formData.requestHeaders) {
-                    formDataObj.append('headers', formData.requestHeaders);
+                    formDataObj.append("headers", formData.requestHeaders);
                 }
 
                 // Handle request body based on content (if it's form data format)
@@ -202,7 +227,7 @@ export const CreateRouteDialog = ({
                         });
                     } catch (e) {
                         // If not valid JSON, add as a single body field
-                        formDataObj.append('body', formData.requestBody);
+                        formDataObj.append("body", formData.requestBody);
                     }
                 }
 
@@ -216,9 +241,10 @@ export const CreateRouteDialog = ({
             const response = await fetch("/api/routes", {
                 method: "POST",
                 body: requestBody,
-                headers: formData.contentType === "application/json"
-                    ? { "Content-Type": "application/json" }
-                    : {} // No Content-Type for FormData, browser sets it with boundary
+                headers:
+                    formData.contentType === "application/json"
+                        ? { "Content-Type": "application/json" }
+                        : {}, // No Content-Type for FormData, browser sets it with boundary
             });
 
             // Handle response
@@ -233,10 +259,13 @@ export const CreateRouteDialog = ({
                 // Reset form data
                 setFormData(DEFAULT_FORM_DATA);
             } else {
-                const errorData = await response.json().catch(() => ({ message: "Unknown error occurred" }));
+                const errorData = await response
+                    .json()
+                    .catch(() => ({ message: "Unknown error occurred" }));
                 addToast({
                     title: "Failed to create route",
-                    description: errorData.message || `Error: ${response.status}`,
+                    description:
+                        errorData.message || `Error: ${response.status}`,
                     color: "danger",
                     variant: "flat",
                 });
@@ -245,12 +274,21 @@ export const CreateRouteDialog = ({
             console.error("Error submitting form:", error);
             addToast({
                 title: "Error",
-                description: "An unexpected error occurred while submitting the form.",
+                description:
+                    "An unexpected error occurred while submitting the form.",
                 color: "danger",
                 variant: "flat",
             });
         }
-    }, [formData, queryClient, isFormValid, isValidRequestHeaders, isValidRequestBody, isValidUrl, onOpenChange]);
+    }, [
+        formData,
+        queryClient,
+        isFormValid,
+        isValidRequestHeaders,
+        isValidRequestBody,
+        isValidUrl,
+        onOpenChange,
+    ]);
 
     // Render component
     return (
@@ -271,12 +309,18 @@ export const CreateRouteDialog = ({
                 <ScrollArea className="max-h-[70vh] pl-4">
                     <div className="py-4 pr-5 space-y-4">
                         {/* Basic Information */}
-                        <Accordion variant="splitted" defaultExpandedKeys={["basic-info"]}>
-                            <AccordionItem key="basic-info" title={
-                                <h3 className="font-medium mb-3">
-                                    Basic Information
-                                </h3>
-                            }>
+                        <Accordion
+                            variant="splitted"
+                            defaultExpandedKeys={["basic-info"]}
+                        >
+                            <AccordionItem
+                                key="basic-info"
+                                title={
+                                    <h3 className="font-medium mb-3">
+                                        Basic Information
+                                    </h3>
+                                }
+                            >
                                 <div className="rounded-lg border border-zinc-200 dark:border-zinc-700/50 p-3">
                                     <div className="space-y-4">
                                         <div className="grid grid-cols-4 items-center gap-4">
@@ -335,14 +379,36 @@ export const CreateRouteDialog = ({
                                                     className="w-full"
                                                     value={formData.url}
                                                     onValueChange={(value) =>
-                                                        handleChange("url", value)
+                                                        handleChange(
+                                                            "url",
+                                                            value,
+                                                        )
                                                     }
-                                                    isInvalid={touchedFields.url && !isValidUrl(formData.url)}
-                                                    color={touchedFields.url && !isValidUrl(formData.url) ? "danger" : undefined}
+                                                    isInvalid={
+                                                        touchedFields.url &&
+                                                        !isValidUrl(
+                                                            formData.url,
+                                                        )
+                                                    }
+                                                    color={
+                                                        touchedFields.url &&
+                                                        !isValidUrl(
+                                                            formData.url,
+                                                        )
+                                                            ? "danger"
+                                                            : undefined
+                                                    }
                                                 />
-                                                {touchedFields.url && !isValidUrl(formData.url) && (
-                                                    <p className="text-danger text-xs">Please enter a valid URL (e.g., https://example.com)</p>
-                                                )}
+                                                {touchedFields.url &&
+                                                    !isValidUrl(
+                                                        formData.url,
+                                                    ) && (
+                                                        <p className="text-danger text-xs">
+                                                            Please enter a valid
+                                                            URL (e.g.,
+                                                            https://example.com)
+                                                        </p>
+                                                    )}
                                             </div>
                                         </div>
                                         <div className="grid grid-cols-4 items-center gap-4">
@@ -390,11 +456,13 @@ export const CreateRouteDialog = ({
                                     </div>
                                 </div>
                             </AccordionItem>
-                            <AccordionItem title={
-                                <h3 className="font-medium mb-3">
-                                    Request Details
-                                </h3>
-                            }>
+                            <AccordionItem
+                                title={
+                                    <h3 className="font-medium mb-3">
+                                        Request Details
+                                    </h3>
+                                }
+                            >
                                 {/* Request Details */}
                                 <div className="rounded-lg border border-zinc-200 dark:border-zinc-700/50 p-3">
                                     <div className="space-y-4">
@@ -422,10 +490,12 @@ export const CreateRouteDialog = ({
                                                         JSON (application/json)
                                                     </SelectItem>
                                                     <SelectItem value="multipart/form-data">
-                                                        Form Data (multipart/form-data)
+                                                        Form Data
+                                                        (multipart/form-data)
                                                     </SelectItem>
                                                     <SelectItem value="application/x-www-form-urlencoded">
-                                                        URL Encoded (application/x-www-form-urlencoded)
+                                                        URL Encoded
+                                                        (application/x-www-form-urlencoded)
                                                     </SelectItem>
                                                 </SelectContent>
                                             </Select>
@@ -443,19 +513,33 @@ export const CreateRouteDialog = ({
                                                     id="requestHeaders"
                                                     placeholder='{"Content-Type": "application/json"}'
                                                     className="w-full"
-                                                    value={formData.requestHeaders}
+                                                    value={
+                                                        formData.requestHeaders
+                                                    }
                                                     onValueChange={(value) =>
                                                         handleChange(
                                                             "requestHeaders",
                                                             value,
                                                         )
                                                     }
-                                                    isInvalid={touchedFields.requestHeaders && !isValidRequestHeaders}
-                                                    color={touchedFields.requestHeaders && !isValidRequestHeaders ? "danger" : undefined}
+                                                    isInvalid={
+                                                        touchedFields.requestHeaders &&
+                                                        !isValidRequestHeaders
+                                                    }
+                                                    color={
+                                                        touchedFields.requestHeaders &&
+                                                        !isValidRequestHeaders
+                                                            ? "danger"
+                                                            : undefined
+                                                    }
                                                 />
-                                                {touchedFields.requestHeaders && !isValidRequestHeaders && (
-                                                    <p className="text-danger text-xs">Headers must be in valid JSON format</p>
-                                                )}
+                                                {touchedFields.requestHeaders &&
+                                                    !isValidRequestHeaders && (
+                                                        <p className="text-danger text-xs">
+                                                            Headers must be in
+                                                            valid JSON format
+                                                        </p>
+                                                    )}
                                             </div>
                                         </div>
                                         <div className="grid grid-cols-4 items-center gap-4">
@@ -469,9 +553,12 @@ export const CreateRouteDialog = ({
                                                 <Input
                                                     variant="bordered"
                                                     id="requestBody"
-                                                    placeholder={formData.contentType === "application/json" ?
-                                                        '{"username": "test", "password": "test"}' :
-                                                        'username=test&password=test'}
+                                                    placeholder={
+                                                        formData.contentType ===
+                                                        "application/json"
+                                                            ? '{"username": "test", "password": "test"}'
+                                                            : "username=test&password=test"
+                                                    }
                                                     className="w-full"
                                                     value={formData.requestBody}
                                                     onValueChange={(value) =>
@@ -480,46 +567,97 @@ export const CreateRouteDialog = ({
                                                             value,
                                                         )
                                                     }
-                                                    isDisabled={formData.method === "GET"}
-                                                    isInvalid={(formData.method === "GET" && formData.requestBody.trim() !== "") ||
-                                                        (formData.contentType === "application/json" &&
-                                                            formData.requestBody.trim() !== "" &&
-                                                            !isValidJson(formData.requestBody))}
-                                                    color={(formData.method === "GET" && formData.requestBody.trim() !== "") ||
-                                                        (formData.contentType === "application/json" &&
-                                                            formData.requestBody.trim() !== "" &&
-                                                            !isValidJson(formData.requestBody)) ? "danger" : undefined}
+                                                    isDisabled={
+                                                        formData.method ===
+                                                        "GET"
+                                                    }
+                                                    isInvalid={
+                                                        (formData.method ===
+                                                            "GET" &&
+                                                            formData.requestBody.trim() !==
+                                                                "") ||
+                                                        (formData.contentType ===
+                                                            "application/json" &&
+                                                            formData.requestBody.trim() !==
+                                                                "" &&
+                                                            !isValidJson(
+                                                                formData.requestBody,
+                                                            ))
+                                                    }
+                                                    color={
+                                                        (formData.method ===
+                                                            "GET" &&
+                                                            formData.requestBody.trim() !==
+                                                                "") ||
+                                                        (formData.contentType ===
+                                                            "application/json" &&
+                                                            formData.requestBody.trim() !==
+                                                                "" &&
+                                                            !isValidJson(
+                                                                formData.requestBody,
+                                                            ))
+                                                            ? "danger"
+                                                            : undefined
+                                                    }
                                                 />
-                                                {formData.method === "GET" && formData.requestBody.trim() !== "" && (
-                                                    <p className="text-danger text-xs">GET requests cannot have a request body</p>
-                                                )}
-                                                {formData.method === "GET" && (
-                                                    <p className="text-default-400 text-xs">Request body is disabled for GET requests</p>
-                                                )}
-                                                {formData.method !== "GET" && formData.contentType === "application/json" &&
-                                                    formData.requestBody.trim() !== "" && !isValidJson(formData.requestBody) && (
-                                                        <p className="text-danger text-xs">Request body must be valid JSON</p>
+                                                {formData.method === "GET" &&
+                                                    formData.requestBody.trim() !==
+                                                        "" && (
+                                                        <p className="text-danger text-xs">
+                                                            GET requests cannot
+                                                            have a request body
+                                                        </p>
                                                     )}
-                                                {formData.method !== "GET" && formData.contentType === "multipart/form-data" && (
+                                                {formData.method === "GET" && (
                                                     <p className="text-default-400 text-xs">
-                                                        For form data, you can enter key-value pairs in JSON format or plain text
+                                                        Request body is disabled
+                                                        for GET requests
                                                     </p>
                                                 )}
-                                                {formData.method !== "GET" && formData.contentType === "application/x-www-form-urlencoded" && (
-                                                    <p className="text-default-400 text-xs">
-                                                        For URL encoded data, use format: key1=value1&key2=value2
-                                                    </p>
-                                                )}
+                                                {formData.method !== "GET" &&
+                                                    formData.contentType ===
+                                                        "application/json" &&
+                                                    formData.requestBody.trim() !==
+                                                        "" &&
+                                                    !isValidJson(
+                                                        formData.requestBody,
+                                                    ) && (
+                                                        <p className="text-danger text-xs">
+                                                            Request body must be
+                                                            valid JSON
+                                                        </p>
+                                                    )}
+                                                {formData.method !== "GET" &&
+                                                    formData.contentType ===
+                                                        "multipart/form-data" && (
+                                                        <p className="text-default-400 text-xs">
+                                                            For form data, you
+                                                            can enter key-value
+                                                            pairs in JSON format
+                                                            or plain text
+                                                        </p>
+                                                    )}
+                                                {formData.method !== "GET" &&
+                                                    formData.contentType ===
+                                                        "application/x-www-form-urlencoded" && (
+                                                        <p className="text-default-400 text-xs">
+                                                            For URL encoded
+                                                            data, use format:
+                                                            key1=value1&key2=value2
+                                                        </p>
+                                                    )}
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </AccordionItem>
-                            <AccordionItem title={
-                                <h3 className="font-medium mb-3">
-                                    Monitoring Configuration
-                                </h3>
-                            }>
+                            <AccordionItem
+                                title={
+                                    <h3 className="font-medium mb-3">
+                                        Monitoring Configuration
+                                    </h3>
+                                }
+                            >
                                 {/* Monitoring Configuration */}
                                 <div className="rounded-lg border border-zinc-200 dark:border-zinc-700/50 p-3">
                                     <div className="space-y-4">
@@ -638,11 +776,13 @@ export const CreateRouteDialog = ({
                                     </div>
                                 </div>
                             </AccordionItem>
-                            <AccordionItem title={
-                                <h3 className="font-medium mb-3">
-                                    Notifications
-                                </h3>
-                            }>
+                            <AccordionItem
+                                title={
+                                    <h3 className="font-medium mb-3">
+                                        Notifications
+                                    </h3>
+                                }
+                            >
                                 {/* Notifications */}
                                 <div className="rounded-lg border border-zinc-200 dark:border-zinc-700/50 p-3">
                                     <div className="space-y-4">
@@ -681,10 +821,7 @@ export const CreateRouteDialog = ({
                     >
                         Cancel
                     </Button>
-                    <Button
-                        onPress={handleSubmit}
-                        isDisabled={!isFormValid}
-                    >
+                    <Button onPress={handleSubmit} isDisabled={!isFormValid}>
                         Add Route
                     </Button>
                 </DialogFooter>

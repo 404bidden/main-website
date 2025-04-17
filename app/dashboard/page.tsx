@@ -64,7 +64,7 @@ export default function Dashboard() {
     };
 
     useEffect(() => {
-        if ((error && !isPending) || !data && !isPending) {
+        if ((error && !isPending) || (!data && !isPending)) {
             router.push("/auth/login"); // Redirect to login if not authenticated
         }
     }, [error, isPending, data, router]);
@@ -92,7 +92,7 @@ export default function Dashboard() {
                                 {isLoading || isRoutesPending ? (
                                     <TableSkeleton rowCount={5} />
                                 ) : (routes?.length === 0 || !routes) &&
-                                    !isLoading ? (
+                                  !isLoading ? (
                                     <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
                                         <Server className="h-12 w-12 text-slate-200 mb-4" />
                                         <h3 className="text-lg font-medium  mb-1">
@@ -201,7 +201,9 @@ export default function Dashboard() {
                                                     Response Time
                                                 </p>
                                                 <p className="font-medium">
-                                                    {route.responseTime === undefined || route.responseTime === null
+                                                    {route.responseTime ===
+                                                        undefined ||
+                                                    route.responseTime === null
                                                         ? "-"
                                                         : `${route.responseTime}ms`}
                                                 </p>

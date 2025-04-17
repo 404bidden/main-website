@@ -58,7 +58,6 @@ export const GET = async (
         return new Response("Unauthorized", { status: 401 });
     }
 
-
     const prisma = new PrismaClient();
     const result = await prisma.route.findUnique({
         where: {
@@ -73,23 +72,30 @@ export const GET = async (
     const requestLogs = await prisma.requestLog.findMany({
         where: {
             routeId: routeId,
-        }
-    })
+        },
+    });
 
     const responseTime = requestLogs.reduce((acc, log) => {
         // Convert from seconds to milliseconds if the value is small (older records)
         const logResponseTime = log.responseTime || 0;
-        return acc + (logResponseTime < 10 ? logResponseTime * 1000 : logResponseTime);
+        return (
+            acc +
+            (logResponseTime < 10 ? logResponseTime * 1000 : logResponseTime)
+        );
     }, 0);
-    const averageResponseTime = requestLogs.length > 0 ? responseTime / requestLogs.length : 0;
+    const averageResponseTime =
+        requestLogs.length > 0 ? responseTime / requestLogs.length : 0;
 
-    return new Response(JSON.stringify({
-        ...result,
-        responseTime: averageResponseTime,
-        logs: requestLogs,
-    }), {
-        status: 200,
-    });
+    return new Response(
+        JSON.stringify({
+            ...result,
+            responseTime: averageResponseTime,
+            logs: requestLogs,
+        }),
+        {
+            status: 200,
+        },
+    );
 };
 
 export const PUT = async (

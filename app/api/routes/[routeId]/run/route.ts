@@ -42,7 +42,8 @@ export const POST = async (
     const requestHeaders: Record<string, string> = {
         "Content-Type": "application/json",
         // Add User-Agent header to prevent some sites from blocking requests
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+        "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
     };
 
     // Parse headers from the route configuration
@@ -50,7 +51,10 @@ export const POST = async (
         try {
             const parsedHeaders = JSON.parse(route.requestHeaders as string);
             // Use our helper function to filter sensitive headers
-            Object.assign(requestHeaders, filterSensitiveHeaders(parsedHeaders));
+            Object.assign(
+                requestHeaders,
+                filterSensitiveHeaders(parsedHeaders),
+            );
         } catch (error) {
             console.error("Error parsing request headers:", error);
         }
@@ -59,9 +63,12 @@ export const POST = async (
     // Safety check for the URL using our helper function
     const securityCheck = validateUrlSecurity(route.url);
     if (!securityCheck.isValid) {
-        return new Response(securityCheck.error || "Access denied for security reasons", {
-            status: 403,
-        });
+        return new Response(
+            securityCheck.error || "Access denied for security reasons",
+            {
+                status: 403,
+            },
+        );
     }
 
     const targetUrl = new URL(route.url);
@@ -81,7 +88,7 @@ export const POST = async (
         method: route.method,
         headers: requestHeaders,
         body: route.requestBody ? JSON.stringify(route.requestBody) : undefined,
-        redirect: 'follow',  // Follow redirects automatically
+        redirect: "follow", // Follow redirects automatically
     });
 
     // Enhanced success determination logic with fair treatment for all domains
@@ -103,7 +110,10 @@ export const POST = async (
         isSuccess = true;
     }
     // Authentication endpoints often return 401/403 by design
-    else if (route.url.includes('/auth/') && (response.status === 401 || response.status === 403)) {
+    else if (
+        route.url.includes("/auth/") &&
+        (response.status === 401 || response.status === 403)
+    ) {
         isSuccess = true;
     }
 
@@ -114,23 +124,26 @@ export const POST = async (
         isSuccess: isSuccess,
         id: crypto.randomUUID(),
         createdAt: new Date(),
-    }
+    };
 
     await prisma.requestLog.create({
         data: requestLog,
     });
 
-    return new Response(JSON.stringify({
-        ...route,
-        lastResponse: {
-            status: response.status,
-            success: isSuccess,
-            responseTime: requestLog.responseTime
-        }
-    }), {
-        status: 200,
-        headers: {
-            "Content-Type": "application/json",
+    return new Response(
+        JSON.stringify({
+            ...route,
+            lastResponse: {
+                status: response.status,
+                success: isSuccess,
+                responseTime: requestLog.responseTime,
+            },
+        }),
+        {
+            status: 200,
+            headers: {
+                "Content-Type": "application/json",
+            },
         },
-    });
+    );
 };
