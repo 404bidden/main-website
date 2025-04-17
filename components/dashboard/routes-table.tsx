@@ -83,15 +83,15 @@ export const RoutesTable = ({ routes }: { routes: RouteWithMetrics[] }) => {
                             <StatusBadge status={route.status} />
                         </TableCell>
                         <TableCell>
-                            {route.status === "down" || !route.responseTime
+                            {route.responseTime === undefined || route.responseTime === null
                                 ? "-"
                                 : `${route.responseTime}ms`}
                         </TableCell>
                         <TableCell>
                             {route.lastChecked
                                 ? formatDistanceToNow(route.lastChecked, {
-                                      addSuffix: true,
-                                  })
+                                    addSuffix: true,
+                                })
                                 : "Never checked"}
                         </TableCell>
                         <TableCell>{route.uptime}</TableCell>

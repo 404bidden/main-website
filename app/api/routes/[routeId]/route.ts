@@ -77,9 +77,11 @@ export const GET = async (
     })
 
     const responseTime = requestLogs.reduce((acc, log) => {
-        return acc + (log.responseTime || 0);
+        // Convert from seconds to milliseconds if the value is small (older records)
+        const logResponseTime = log.responseTime || 0;
+        return acc + (logResponseTime < 10 ? logResponseTime * 1000 : logResponseTime);
     }, 0);
-    const averageResponseTime = responseTime / requestLogs.length;
+    const averageResponseTime = requestLogs.length > 0 ? responseTime / requestLogs.length : 0;
 
     return new Response(JSON.stringify({
         ...result,

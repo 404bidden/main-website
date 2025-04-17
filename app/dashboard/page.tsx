@@ -201,8 +201,7 @@ export default function Dashboard() {
                                                     Response Time
                                                 </p>
                                                 <p className="font-medium">
-                                                    {route.status === "down" ||
-                                                        !route.responseTime
+                                                    {route.responseTime === undefined || route.responseTime === null
                                                         ? "-"
                                                         : `${route.responseTime}ms`}
                                                 </p>

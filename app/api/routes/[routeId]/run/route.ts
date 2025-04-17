@@ -83,7 +83,7 @@ export const POST = async (
     const requestLog = {
         routeId: route.id,
         statusCode: response.status,
-        responseTime: (performance.now() - startTime) / 1000, // Store as number in seconds
+        responseTime: performance.now() - startTime, // Store in milliseconds (not seconds)
         isSuccess: response.ok,
         id: crypto.randomUUID(),
         createdAt: new Date(),

@@ -37,12 +37,12 @@ export const GET = async (req: NextRequest) => {
         const logs = route.RequestLog;
         const lastLog = logs.length > 0 ? logs[0] : null;
 
-        // Calculate uptime percentage (successful requests / total requests)
-        const uptimePercentage =
-            logs.length > 0
-                ? (logs.filter((log) => log.isSuccess).length / logs.length) *
-                100
-                : 0;
+        // Calculate more detailed metrics
+        const totalRequests = logs.length;
+        const successfulRequests = logs.filter(log => log.isSuccess).length;
+        const uptimePercentage = totalRequests > 0
+            ? (successfulRequests / totalRequests) * 100
+            : 0;
 
         // Calculate status based on uptime percentage
         let status = "Not monitored";
@@ -63,6 +63,24 @@ export const GET = async (req: NextRequest) => {
         }
 
         // Define type for the route with metrics
+
+        // Calculate average response time
+        const avgResponseTime = totalRequests > 0
+            ? logs.reduce((sum, log) => {
+                // Convert from seconds to milliseconds if the value is small (older records)
+                const responseTime = log.responseTime || 0;
+                return sum + (responseTime < 10 ? responseTime * 1000 : responseTime);
+            }, 0) / totalRequests
+            : 0;
+
+        // Calculate recent metrics (last 24h if available)
+        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        const recentLogs = logs.filter(log =>
+            log.createdAt && new Date(log.createdAt) >= twentyFourHoursAgo);
+        const recentUptime = recentLogs.length > 0
+            ? (recentLogs.filter(log => log.isSuccess).length / recentLogs.length) * 100
+            : uptimePercentage;
+
         return {
             id: route.id,
             name: route.name,
@@ -70,9 +88,14 @@ export const GET = async (req: NextRequest) => {
             method: route.method,
             status,
             statusCode: lastLog?.statusCode,
-            responseTime: lastLog?.responseTime,
+            // Use lastLog response time if available, otherwise use the calculated average
+            // Always return a number (0 if no data) instead of undefined
+            responseTime: lastLog?.responseTime !== undefined ? lastLog.responseTime : Math.round(avgResponseTime),
+            avgResponseTime: Math.round(avgResponseTime),
             lastChecked: lastLog?.createdAt || null,
             uptime: uptimePercentage.toFixed(2) + "%",
+            recentUptime: recentUptime.toFixed(2) + "%",
+            totalChecks: totalRequests,
             expectedStatusCode: route.expectedStatusCode,
             description: route.description,
             isActive: route.isActive,
