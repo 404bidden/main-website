@@ -43,7 +43,6 @@ export default function Dashboard() {
         refetch,
     } = useQuery<RouteWithMetrics[]>({
         queryKey: ["routes"],
-        initialData: undefined,
         queryFn: async () => {
             const response = await fetch("/api/routes");
             if (!response.ok) {
@@ -65,7 +64,7 @@ export default function Dashboard() {
     };
 
     useEffect(() => {
-        if (error && !isPending && !data) {
+        if ((error && !isPending) || !data && !isPending) {
             router.push("/auth/login"); // Redirect to login if not authenticated
         }
     }, [error, isPending, data, router]);
