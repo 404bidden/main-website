@@ -41,6 +41,8 @@ export const POST = async (
 
     const requestHeaders: Record<string, string> = {
         "Content-Type": "application/json",
+        // Add User-Agent header to prevent some sites from blocking requests
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
     };
 
     // Parse headers from the route configuration
@@ -74,17 +76,42 @@ export const POST = async (
     }
     const startTime = performance.now();
 
+    // Use fetch with redirects follow
     const response = await fetch(targetUrl, {
         method: route.method,
         headers: requestHeaders,
         body: route.requestBody ? JSON.stringify(route.requestBody) : undefined,
+        redirect: 'follow',  // Follow redirects automatically
     });
+
+    // Enhanced success determination logic with fair treatment for all domains
+    const expectedStatus = route.expectedStatusCode || 200;
+
+    // Determine success with consistent criteria for all domains
+    let isSuccess = false;
+
+    // Check if response matches expected status exactly
+    if (response.status === expectedStatus) {
+        isSuccess = true;
+    }
+    // Standard success codes (2xx range)
+    else if (response.status >= 200 && response.status < 300) {
+        isSuccess = true;
+    }
+    // Redirects are usually fine (3xx range)
+    else if (response.status >= 300 && response.status < 400) {
+        isSuccess = true;
+    }
+    // Authentication endpoints often return 401/403 by design
+    else if (route.url.includes('/auth/') && (response.status === 401 || response.status === 403)) {
+        isSuccess = true;
+    }
 
     const requestLog = {
         routeId: route.id,
         statusCode: response.status,
         responseTime: performance.now() - startTime, // Store in milliseconds (not seconds)
-        isSuccess: response.ok,
+        isSuccess: isSuccess,
         id: crypto.randomUUID(),
         createdAt: new Date(),
     }
@@ -93,7 +120,14 @@ export const POST = async (
         data: requestLog,
     });
 
-    return new Response(JSON.stringify(route), {
+    return new Response(JSON.stringify({
+        ...route,
+        lastResponse: {
+            status: response.status,
+            success: isSuccess,
+            responseTime: requestLog.responseTime
+        }
+    }), {
         status: 200,
         headers: {
             "Content-Type": "application/json",

@@ -44,21 +44,37 @@ export const GET = async (req: NextRequest) => {
             ? (successfulRequests / totalRequests) * 100
             : 0;
 
-        // Calculate status based on uptime percentage
+        // Calculate status based on uptime percentage and other factors
         let status = "Not monitored";
         if (lastLog) {
-            // Check for latency issues
-            const hasLatencySpike =
-                lastLog.responseTime && route.responseTimeThreshold
+            // First check if we even have any logs
+            if (totalRequests === 0) {
+                status = "Not monitored";
+            } else if (lastLog.responseTime === undefined || !lastLog.isSuccess) {
+                // The last check failed completely
+                status = "down";
+            } else {
+                // Check for latency issues
+                const hasLatencySpike = lastLog.responseTime && route.responseTimeThreshold
                     ? lastLog.responseTime > route.responseTimeThreshold
                     : false;
 
-            if (uptimePercentage >= 95) {
-                status = hasLatencySpike ? "degraded" : "up";
-            } else if (uptimePercentage >= 80) {
-                status = "degraded";
-            } else {
-                status = "down";
+                // Check recent uptime trend (last 5 logs if available)
+                const recentLogs = logs.slice(0, 5);
+                const recentFailures = recentLogs.filter(log => !log.isSuccess).length;
+                const hasRecentIssues = recentFailures > 0;
+
+                // Apply consistent status determination for all domains
+                if (uptimePercentage >= 98) {
+                    status = hasLatencySpike ? "degraded" : "up";
+                } else if (uptimePercentage >= 90) {
+                    // Even with good uptime, if there are very recent issues, mark as degraded
+                    status = hasRecentIssues ? "degraded" : "up";
+                } else if (uptimePercentage >= 75) {
+                    status = "degraded";
+                } else {
+                    status = "down";
+                }
             }
         }
 
