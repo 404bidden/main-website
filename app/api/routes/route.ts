@@ -1,6 +1,6 @@
-import { auth } from "@/lib/auth";
-
 import { PrismaClient } from "@/generated/prisma";
+import { auth } from "@/lib/auth";
+import { filterSensitiveHeaders, validateUrlSecurity } from "@/lib/security";
 import { headers } from "next/headers";
 import { NextRequest } from "next/server";
 
@@ -125,32 +125,18 @@ export const POST = async (req: NextRequest) => {
     // If testOnly flag is set, we'll just test the route without saving it
     if (testOnly) {
         try {
-            // Parse the target URL and perform security checks
-            const targetUrl = new URL(url);
-
-            // Security checks - Block localhost, private IPs, etc.
-            if (
-                // Block localhost and loopback addresses
-                targetUrl.hostname === "localhost" ||
-                targetUrl.hostname === "127.0.0.1" ||
-                /^127\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})$/.test(targetUrl.hostname) ||
-                targetUrl.hostname === "[::1]" ||
-                // Block private IP ranges (IPv4)
-                /^10\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})$/.test(targetUrl.hostname) ||
-                /^172\.(1[6-9]|2[0-9]|3[0-1])\.([0-9]{1,3})\.([0-9]{1,3})$/.test(targetUrl.hostname) ||
-                /^192\.168\.([0-9]{1,3})\.([0-9]{1,3})$/.test(targetUrl.hostname) ||
-                // Block link-local addresses
-                /^169\.254\.([0-9]{1,3})\.([0-9]{1,3})$/.test(targetUrl.hostname) ||
-                // Block internal DNS names
-                /\.(local|internal|private|localhost|corp|home|lan)$/.test(targetUrl.hostname)
-            ) {
+            // Validate URL security using our helper function
+            const securityCheck = validateUrlSecurity(url);
+            if (!securityCheck.isValid) {
                 return new Response(JSON.stringify({
-                    error: "Access denied for security reasons: cannot test with local or private URLs"
+                    error: securityCheck.error
                 }), {
                     status: 403,
                     headers: { "Content-Type": "application/json" }
                 });
             }
+
+            const targetUrl = new URL(url);
 
             // Prepare headers for the request
             const headers: Record<string, string> = {};
@@ -160,19 +146,8 @@ export const POST = async (req: NextRequest) => {
                     ? JSON.parse(requestHeaders)
                     : requestHeaders;
 
-                // Filter out sensitive headers
-                const forbiddenHeaders = [
-                    "authorization", "proxy-authorization", "cookie", "set-cookie",
-                    "x-csrf", "x-xsrf", "x-api-key", "api-key", "x-functions-key"
-                ];
-
-                for (const key in parsedHeaders) {
-                    if (!forbiddenHeaders.includes(key.toLowerCase()) &&
-                        !key.toLowerCase().startsWith("sec-") &&
-                        !key.toLowerCase().startsWith("proxy-")) {
-                        headers[key] = parsedHeaders[key];
-                    }
-                }
+                // Use our helper function to filter sensitive headers
+                Object.assign(headers, filterSensitiveHeaders(parsedHeaders));
             }
 
             // Set content type header based on provided contentType
@@ -243,10 +218,10 @@ export const POST = async (req: NextRequest) => {
 
         } catch (error: unknown) {
             // Handle any errors during testing
-            const errorMessage = error instanceof Error 
-                ? error.message 
+            const errorMessage = error instanceof Error
+                ? error.message
                 : 'Unknown error occurred';
-                
+
             return new Response(JSON.stringify({
                 error: `Failed to test route: ${errorMessage}`,
                 success: false
@@ -293,10 +268,10 @@ export const POST = async (req: NextRequest) => {
             headers: { "Content-Type": "application/json" }
         });
     } catch (error: unknown) {
-        const errorMessage = error instanceof Error 
-            ? error.message 
+        const errorMessage = error instanceof Error
+            ? error.message
             : 'Unknown error occurred';
-        
+
         return new Response(JSON.stringify({
             error: `Failed to create route: ${errorMessage}`
         }), {
