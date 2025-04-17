@@ -86,6 +86,7 @@ export const GET = async (
     return new Response(JSON.stringify({
         ...result,
         responseTime: averageResponseTime,
+        logs: requestLogs,
     }), {
         status: 200,
     });
