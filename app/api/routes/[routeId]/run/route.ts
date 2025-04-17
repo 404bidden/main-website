@@ -80,15 +80,17 @@ export const POST = async (
         body: route.requestBody ? JSON.stringify(route.requestBody) : undefined,
     });
 
+    const requestLog = {
+        routeId: route.id,
+        statusCode: response.status,
+        responseTime: (performance.now() - startTime) / 1000, // Store as number in seconds
+        isSuccess: response.ok,
+        id: crypto.randomUUID(),
+        createdAt: new Date(),
+    }
+
     await prisma.requestLog.create({
-        data: {
-            routeId: route.id,
-            statusCode: response.status,
-            responseTime: (performance.now() - startTime) / 1000, // Store as number in seconds
-            isSuccess: response.ok,
-            id: crypto.randomUUID(),
-            createdAt: new Date(),
-        },
+        data: requestLog,
     });
 
     return new Response(JSON.stringify(route), {

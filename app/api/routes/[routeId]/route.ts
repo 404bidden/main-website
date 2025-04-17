@@ -24,8 +24,6 @@ export const DELETE = async (
         return new Response("Unauthorized", { status: 401 });
     }
 
-    const { user } = session;
-
     const prisma = new PrismaClient();
     const result = await prisma.route.delete({
         where: {
@@ -60,7 +58,6 @@ export const GET = async (
         return new Response("Unauthorized", { status: 401 });
     }
 
-    const { user } = session;
 
     const prisma = new PrismaClient();
     const result = await prisma.route.findUnique({
@@ -69,8 +66,25 @@ export const GET = async (
             userId: session.user.id,
         },
     });
+    if (!result) {
+        return new Response("Route not found", { status: 404 });
+    }
+    // Tag on responseTime to the response from the logs
+    const requestLogs = await prisma.requestLog.findMany({
+        where: {
+            routeId: routeId,
+        }
+    })
 
-    return new Response(JSON.stringify(result), {
+    const responseTime = requestLogs.reduce((acc, log) => {
+        return acc + (log.responseTime || 0);
+    }, 0);
+    const averageResponseTime = responseTime / requestLogs.length;
+
+    return new Response(JSON.stringify({
+        ...result,
+        responseTime: averageResponseTime,
+    }), {
         status: 200,
     });
 };
@@ -95,8 +109,6 @@ export const PUT = async (
     if (!session) {
         return new Response("Unauthorized", { status: 401 });
     }
-
-    const { user } = session;
 
     const prisma = new PrismaClient();
     const body = await req.json();
