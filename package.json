@@ -72,6 +72,7 @@
         "@next/eslint-plugin-next": "15.0.4",
         "@react-types/shared": "3.29.0",
         "@types/node": "22.14.1",
+        "@types/pg": "^8.11.13",
         "@types/react": "18.3.3",
         "@types/react-dom": "18.3.0",
         "@typescript-eslint/eslint-plugin": "8.29.1",
