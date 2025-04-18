@@ -25,6 +25,11 @@ export const DELETE = async (
     }
 
     const prisma = new PrismaClient();
+    await prisma.requestLog.deleteMany({
+        where: {
+            routeId: routeId,
+        },
+    })
     const result = await prisma.route.delete({
         where: {
             id: routeId,
