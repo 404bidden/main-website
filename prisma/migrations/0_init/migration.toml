@@ -1,0 +1,12 @@
+# This is an empty migration.toml file, used as a migration history marker.
+# Contains your current database state, used as a baseline
+
+# Please edit this file with care.
+# Prisma team recommends that you do not use this file to track new migration builds.
+# Instead, use future migrations to modify data.
+
+# Learn more about migrations and Prisma migrate:
+# https://pris.ly/d/prisma-migrate
+
+migration_name = "0_init"
+strategy = "baseline" 

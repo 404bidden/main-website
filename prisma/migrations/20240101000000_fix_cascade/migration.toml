@@ -1,0 +1,3 @@
+# This migration adds onDelete: Cascade to the foreign key constraint between RequestLog and Route
+
+migration_name = "fix_cascade" 
