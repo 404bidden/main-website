@@ -37,8 +37,7 @@ export const ResetPasswordEmail = ({
                             To reset your password, click the button below:
                         </Text>
                         <Button
-                            className="px-5 py-3"
-                            style={styles.button}
+                            className="box-border w-full rounded-[8px] bg-indigo-600 px-[12px] py-[12px] text-center font-semibold text-white"
                             href={resetLink}
                         >
                             Reset Password

@@ -65,15 +65,16 @@ export const GET = async (req: NextRequest) => {
                 // Check recent uptime trend (last 5 logs if available)
                 const recentLogs = logs.slice(0, 5);
                 const recentFailures = recentLogs.filter(
-                    (log) => !log.isSuccess,
+                    (log) => !log.isSuccess
                 ).length;
                 const hasRecentIssues = recentFailures > 0;
 
                 // Apply consistent status determination for all domains
                 if (uptimePercentage >= 98) {
+                    // For high uptime, only mark as degraded if there's a latency spike
                     status = hasLatencySpike ? "degraded" : "up";
                 } else if (uptimePercentage >= 90) {
-                    // Even with good uptime, if there are very recent issues, mark as degraded
+                    // Between 90-98% uptime, check if there were recent issues
                     status = hasRecentIssues ? "degraded" : "up";
                 } else if (uptimePercentage >= 75) {
                     status = "degraded";
@@ -89,15 +90,15 @@ export const GET = async (req: NextRequest) => {
         const avgResponseTime =
             totalRequests > 0
                 ? logs.reduce((sum, log) => {
-                      // Convert from seconds to milliseconds if the value is small (older records)
-                      const responseTime = log.responseTime || 0;
-                      return (
-                          sum +
-                          (responseTime < 10
-                              ? responseTime * 1000
-                              : responseTime)
-                      );
-                  }, 0) / totalRequests
+                    // Convert from seconds to milliseconds if the value is small (older records)
+                    const responseTime = log.responseTime || 0;
+                    return (
+                        sum +
+                        (responseTime < 10
+                            ? responseTime * 1000
+                            : responseTime)
+                    );
+                }, 0) / totalRequests
                 : 0;
 
         // Calculate recent metrics (last 24h if available)
@@ -109,8 +110,8 @@ export const GET = async (req: NextRequest) => {
         const recentUptime =
             recentLogs.length > 0
                 ? (recentLogs.filter((log) => log.isSuccess).length /
-                      recentLogs.length) *
-                  100
+                    recentLogs.length) *
+                100
                 : uptimePercentage;
 
         return {
