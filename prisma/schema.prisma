@@ -1,3 +1,4 @@
+
 generator client {
   provider = "prisma-client-js"
   output   = "../generated/prisma"
@@ -9,9 +10,9 @@ datasource db {
 }
 
 model RequestLog {
-  id           String   @id @default(uuid())
+  id           String   @id
   statusCode   Int?
-  responseTime Int?
+  responseTime Int?  // Time taken for the request in milliseconds.
   isSuccess    Boolean
   createdAt    DateTime @default(now())
   routeId      String
@@ -19,60 +20,62 @@ model RequestLog {
 }
 
 model Route {
-  id                    String       @id @default(uuid())
-  name                  String
-  description           String?
-  url                   String
-  method                String
-  requestHeaders        Json?
-  requestBody           String?
-  expectedStatusCode    Int?
-  responseTimeThreshold Int?
-  monitoringInterval    Int          @default(5)
-  retries               Int?
-  alertEmail            String?
+  id                    String       @id
+  name                  String // Name of the route.
+  description           String? // Description of the route.
+  url                   String // URL of the route to be monitored.
+  method                String // HTTP method (GET, POST, etc.).
+  requestHeaders        Json? // Headers to be sent with the request.
+  requestBody           String? // Body of the request (for POST, PUT, etc.).
+  expectedStatusCode    Int? // The expected HTTP status code from the route.
+  responseTimeThreshold Int? // Maximum acceptable response time (ms).
+  monitoringInterval    Int          @default(5) // Interval for checking the route (seconds).
+  retries               Int? // Number of retry attempts on failure.
+  alertEmail            String? // Email for sending alerts if the check fails.
   isActive              Boolean      @default(true)
   createdAt             DateTime     @default(now())
-  updatedAt             DateTime     @default(now()) @updatedAt
+  updatedAt             DateTime     @default(now())
   userId                String
   RequestLog            RequestLog[]
   User                  User         @relation(fields: [userId], references: [id])
 }
 
 model User {
-  id            String    @id @default(uuid())
+  id            String    @id
   email         String    @unique
   name          String?
   createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  updatedAt     DateTime
+  routes        Route[]
   emailVerified Boolean
   image         String?
-  routes        Route[]
-  accounts      Account[]
   sessions      Session[]
+  accounts      Account[]
 
   @@map("user")
 }
 
 model Session {
-  id        String   @id @default(uuid())
+  id        String   @id
   expiresAt DateTime
-  token     String   @unique
+  token     String
   createdAt DateTime
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime
   ipAddress String?
   userAgent String?
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@unique([token])
   @@map("session")
 }
 
 model Account {
-  id                    String    @id @default(uuid())
+  id                    String    @id
   accountId             String
   providerId            String
   userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   accessToken           String?
   refreshToken          String?
   idToken               String?
@@ -81,19 +84,18 @@ model Account {
   scope                 String?
   password              String?
   createdAt             DateTime
-  updatedAt             DateTime  @updatedAt
-  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  updatedAt             DateTime
 
   @@map("account")
 }
 
 model Verification {
-  id         String    @id @default(uuid())
+  id         String    @id
   identifier String
   value      String
   expiresAt  DateTime
   createdAt  DateTime?
-  updatedAt  DateTime? @updatedAt
+  updatedAt  DateTime?
 
   @@map("verification")
 }
