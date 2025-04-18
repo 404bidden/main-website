@@ -17,7 +17,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-export default function RegisterPage() {
+export default function LoginPage() {
     const router = useRouter();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -93,9 +93,7 @@ export default function RegisterPage() {
                                 value={password}
                                 onValueChange={setPassword}
                                 isRequired
-                                minLength={10}
                                 placeholder="••••••••••"
-                                description="Password must be at least 10 characters long"
                             />
                         </div>
                     </CardContent>
