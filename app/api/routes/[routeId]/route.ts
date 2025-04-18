@@ -1,7 +1,12 @@
-import { PrismaClient } from "@/generated/prisma";
+import { requestLog, routes } from "@/db/schema";
 import { auth } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { eq, type InferModel } from "drizzle-orm";
 import { headers } from "next/headers";
 import { NextRequest } from "next/server";
+
+// Define type for logs
+type LogModel = InferModel<typeof requestLog>;
 
 export const DELETE = async (
     req: NextRequest,
@@ -24,15 +29,12 @@ export const DELETE = async (
         return new Response("Unauthorized", { status: 401 });
     }
 
-    const prisma = new PrismaClient();
-    const result = await prisma.route.delete({
-        where: {
-            id: routeId,
-            userId: session.user.id,
-        },
-    });
+    // Delete route ensuring user ownership
+    const [deleted] = await db.delete(routes)
+        .where(eq(routes.id, routeId), eq(routes.userId, session.user.id))
+        .returning();
 
-    return new Response(JSON.stringify(result), {
+    return new Response(JSON.stringify(deleted), {
         status: 200,
     });
 };
@@ -58,24 +60,17 @@ export const GET = async (
         return new Response("Unauthorized", { status: 401 });
     }
 
-    const prisma = new PrismaClient();
-    const result = await prisma.route.findUnique({
-        where: {
-            id: routeId,
-            userId: session.user.id,
-        },
-    });
+    // Fetch route ensuring user ownership
+    const [result] = await db.select().from(routes)
+        .where(eq(routes.id, routeId), eq(routes.userId, session.user.id));
     if (!result) {
         return new Response("Route not found", { status: 404 });
     }
     // Tag on responseTime to the response from the logs
-    const requestLogs = await prisma.requestLog.findMany({
-        where: {
-            routeId: routeId,
-        },
-    });
+    const requestLogs: LogModel[] = await db.select().from(requestLog)
+        .where(eq(requestLog.routeId, routeId));
 
-    const responseTime = requestLogs.reduce((acc, log) => {
+    const responseTime: number = requestLogs.reduce((acc: number, log: LogModel) => {
         // Convert from seconds to milliseconds if the value is small (older records)
         const logResponseTime = log.responseTime || 0;
         return (
@@ -119,16 +114,12 @@ export const PUT = async (
         return new Response("Unauthorized", { status: 401 });
     }
 
-    const prisma = new PrismaClient();
     const body = await req.json();
-
-    const result = await prisma.route.update({
-        where: {
-            id: routeId,
-            userId: session.user.id,
-        },
-        data: body,
-    });
+    // Update route ensuring user ownership
+    const [result] = await db.update(routes)
+        .set(body)
+        .where(eq(routes.id, routeId), eq(routes.userId, session.user.id))
+        .returning();
 
     return new Response(JSON.stringify(result), {
         status: 200,

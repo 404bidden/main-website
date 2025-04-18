@@ -1,6 +1,8 @@
-import { PrismaClient } from "@/generated/prisma";
+import { requestLog as requestLogTable, routes } from "@/db/schema";
 import { auth } from "@/lib/auth";
+import { db } from "@/lib/db";
 import { filterSensitiveHeaders, validateUrlSecurity } from "@/lib/security";
+import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { NextRequest } from "next/server";
 
@@ -27,13 +29,9 @@ export const POST = async (
 
     const { user } = session;
 
-    const prisma = new PrismaClient();
-    const route = await prisma.route.findUnique({
-        where: {
-            id: routeId,
-            userId: session.user.id,
-        },
-    });
+    // Fetch route ensuring user ownership
+    const [route] = await db.select().from(routes)
+        .where(eq(routes.id, routeId), eq(routes.userId, session.user.id));
 
     if (!route) {
         return new Response("Route not found", { status: 404 });
@@ -117,7 +115,7 @@ export const POST = async (
         isSuccess = true;
     }
 
-    const requestLog = {
+    const logEntry = {
         routeId: route.id,
         statusCode: response.status,
         responseTime: performance.now() - startTime, // Store in milliseconds (not seconds)
@@ -126,9 +124,8 @@ export const POST = async (
         createdAt: new Date(),
     };
 
-    await prisma.requestLog.create({
-        data: requestLog,
-    });
+    // Insert log using Drizzle
+    await db.insert(requestLogTable).values(logEntry);
 
     return new Response(
         JSON.stringify({
@@ -136,7 +133,7 @@ export const POST = async (
             lastResponse: {
                 status: response.status,
                 success: isSuccess,
-                responseTime: requestLog.responseTime,
+                responseTime: logEntry.responseTime,
             },
         }),
         {

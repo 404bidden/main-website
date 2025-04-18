@@ -1,11 +1,14 @@
-import { PrismaClient } from "@/generated/prisma";
+import { requestLog, routes } from "@/db/schema";
 import { auth } from "@/lib/auth";
+import { db } from "@/lib/db";
 import { filterSensitiveHeaders, validateUrlSecurity } from "@/lib/security";
+import { eq, type InferModel } from "drizzle-orm";
 import { headers } from "next/headers";
 import { NextRequest } from "next/server";
 
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
-const prisma = globalForPrisma.prisma || new PrismaClient();
+// Define types for models
+type RouteModel = InferModel<typeof routes>;
+type LogModel = InferModel<typeof requestLog>;
 
 export const GET = async (req: NextRequest) => {
     // Route responsible for getting all the users routes
@@ -18,28 +21,25 @@ export const GET = async (req: NextRequest) => {
     }
 
     const { user } = session;
-    const routes = await prisma.route.findMany({
-        where: {
-            userId: user.id,
-        },
-        include: {
-            RequestLog: {
-                orderBy: {
-                    createdAt: "desc",
-                },
-                take: 100, // Fetch the last 100 logs to calculate uptime
-            },
-        },
-    });
+    // Fetch user routes
+    const routesData: RouteModel[] = await db.select().from(routes).where(eq(routes.userId, user.id));
+
+    // Fetch logs for each route
+    const routesWithLogs: { route: RouteModel; logs: LogModel[] }[] = await Promise.all(routesData.map(async (route: RouteModel) => {
+        const logs: LogModel[] = await db.select().from(requestLog)
+            .where(eq(requestLog.routeId, route.id))
+            .orderBy(requestLog.createdAt, 'desc')
+            .limit(100);
+        return { route, logs };
+    }));
 
     // Enhance the route data with metrics
-    const routesWithMetrics = routes.map((route) => {
-        const logs = route.RequestLog;
+    const routesWithMetrics = routesWithLogs.map(({ route, logs }: { route: RouteModel; logs: LogModel[] }) => {
         const lastLog = logs.length > 0 ? logs[0] : null;
 
         // Calculate more detailed metrics
         const totalRequests = logs.length;
-        const successfulRequests = logs.filter((log) => log.isSuccess).length;
+        const successfulRequests = logs.filter((log: LogModel) => log.isSuccess).length;
         const uptimePercentage =
             totalRequests > 0 ? (successfulRequests / totalRequests) * 100 : 0;
 
@@ -63,10 +63,8 @@ export const GET = async (req: NextRequest) => {
                         : false;
 
                 // Check recent uptime trend (last 5 logs if available)
-                const recentLogs = logs.slice(0, 5);
-                const recentFailures = recentLogs.filter(
-                    (log) => !log.isSuccess
-                ).length;
+                const recentLogs: LogModel[] = logs.slice(0, 5);
+                const recentFailures = recentLogs.filter((log: LogModel) => !log.isSuccess).length;
                 const hasRecentIssues = recentFailures > 0;
 
                 // Apply consistent status determination for all domains
@@ -84,35 +82,22 @@ export const GET = async (req: NextRequest) => {
             }
         }
 
-        // Define type for the route with metrics
-
         // Calculate average response time
-        const avgResponseTime =
-            totalRequests > 0
-                ? logs.reduce((sum, log) => {
-                    // Convert from seconds to milliseconds if the value is small (older records)
-                    const responseTime = log.responseTime || 0;
-                    return (
-                        sum +
-                        (responseTime < 10
-                            ? responseTime * 1000
-                            : responseTime)
-                    );
-                }, 0) / totalRequests
-                : 0;
+        const avgResponseTime = totalRequests > 0 ? logs.reduce((sum: number, log: LogModel) => {
+            // Convert from seconds to milliseconds if the value is small (older records)
+            const responseTime = log.responseTime || 0;
+            return (
+                sum +
+                (responseTime < 10
+                    ? responseTime * 1000
+                    : responseTime)
+            );
+        }, 0) / totalRequests : 0;
 
         // Calculate recent metrics (last 24h if available)
         const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-        const recentLogs = logs.filter(
-            (log) =>
-                log.createdAt && new Date(log.createdAt) >= twentyFourHoursAgo,
-        );
-        const recentUptime =
-            recentLogs.length > 0
-                ? (recentLogs.filter((log) => log.isSuccess).length /
-                    recentLogs.length) *
-                100
-                : uptimePercentage;
+        const recentLogs24h: LogModel[] = logs.filter((log: LogModel) => log.createdAt && new Date(log.createdAt) >= twentyFourHoursAgo);
+        const recentUptime = recentLogs24h.length > 0 ? (recentLogs24h.filter((log: LogModel) => log.isSuccess).length / recentLogs24h.length) * 100 : uptimePercentage;
 
         return {
             id: route.id,
@@ -121,8 +106,6 @@ export const GET = async (req: NextRequest) => {
             method: route.method,
             status,
             statusCode: lastLog?.statusCode,
-            // Use lastLog response time if available, otherwise use the calculated average
-            // Always return a number (0 if no data) instead of undefined
             responseTime:
                 lastLog?.responseTime !== undefined
                     ? lastLog.responseTime
@@ -328,26 +311,25 @@ export const POST = async (req: NextRequest) => {
 
     // Create the route in the database
     try {
-        const route = await prisma.route.create({
-            data: {
-                id: crypto.randomUUID(), // Generate a unique ID for the route.
-                method, // HTTP method (GET, POST, etc.).
-                url,
-                name, // Name of the route.
-                description, // Description of the route.
-                requestHeaders: requestHeaders
-                    ? JSON.stringify(requestHeaders)
-                    : JSON.stringify({}), // Headers to be sent with the request.
-                requestBody: requestBody ? JSON.stringify(requestBody) : null, // Body of the request (for POST, PUT, etc.).
-                expectedStatusCode, // The expected HTTP status code from the route.
-                responseTimeThreshold, // Maximum acceptable response time (ms).
-                monitoringInterval: parseInt(monitoringInterval), // Interval for checking the route (seconds).
-                retries: retries ? parseInt(retries) : 0, // Number of retry attempts on failure.
-                alertEmail, // Email for sending alerts if the check fails.
-                isActive: true, // Set the route as active by default.
-                userId: user.id, // Associate the route with the authenticated user.
-            },
-        });
+        const inserted = await db.insert(routes).values({
+            id: crypto.randomUUID(),
+            method,
+            url,
+            name,
+            description,
+            requestHeaders: requestHeaders
+                ? JSON.stringify(requestHeaders)
+                : JSON.stringify({}),
+            requestBody: requestBody ? JSON.stringify(requestBody) : null,
+            expectedStatusCode,
+            responseTimeThreshold,
+            monitoringInterval: parseInt(monitoringInterval),
+            retries: retries ? parseInt(retries) : 0,
+            alertEmail,
+            isActive: true,
+            userId: user.id,
+        }).returning();
+        const route = inserted[0];
 
         return new Response(JSON.stringify(route), {
             status: 201,

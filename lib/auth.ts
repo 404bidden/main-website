@@ -1,18 +1,18 @@
-import { betterAuth } from "better-auth";
-import { prismaAdapter } from "better-auth/adapters/prisma";
-import { PrismaClient } from "../generated/prisma";
-import { Resend } from "resend";
 import ResetPasswordEmail from "@/components/emails/reset-password";
+import * as schema from "@/db/schema";
+import { db } from "@/lib/db";
+import { betterAuth } from "better-auth";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const prisma = new PrismaClient();
 
 export const auth = betterAuth({
     emailAndPassword: {
         enabled: true,
         autoSignIn: true,
         minPasswordLength: 10,
-        sendResetPassword: async ({ user, url, token }, request) => { 
+        sendResetPassword: async ({ user, url, token }, request) => {
             await resend.emails.send({
                 from: 'support@404bidden.tpne.news',
                 to: user.email,
@@ -24,7 +24,8 @@ export const auth = betterAuth({
             });
         }
     },
-    database: prismaAdapter(prisma, {
-        provider: "postgresql",
+    database: drizzleAdapter(db, {
+        schema,
+        provider: "pg",
     }),
 });
