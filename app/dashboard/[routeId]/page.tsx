@@ -383,7 +383,7 @@ function RouteDetailsContent() {
                                         description="Maximum acceptable response time"
                                         defaultValue={
                                             routeDetails.responseTimeThreshold ||
-                                            500
+                                            5000
                                         }
                                     />
                                 </div>
