@@ -90,15 +90,15 @@ export const GET = async (req: NextRequest) => {
         const avgResponseTime =
             totalRequests > 0
                 ? logs.reduce((sum, log) => {
-                      // Convert from seconds to milliseconds if the value is small (older records)
-                      const responseTime = log.responseTime || 0;
-                      return (
-                          sum +
-                          (responseTime < 10
-                              ? responseTime * 1000
-                              : responseTime)
-                      );
-                  }, 0) / totalRequests
+                    // Convert from seconds to milliseconds if the value is small (older records)
+                    const responseTime = log.responseTime || 0;
+                    return (
+                        sum +
+                        (responseTime < 10
+                            ? responseTime * 1000
+                            : responseTime)
+                    );
+                }, 0) / totalRequests
                 : 0;
 
         // Calculate recent metrics (last 24h if available)
@@ -110,8 +110,8 @@ export const GET = async (req: NextRequest) => {
         const recentUptime =
             recentLogs.length > 0
                 ? (recentLogs.filter((log) => log.isSuccess).length /
-                      recentLogs.length) *
-                  100
+                    recentLogs.length) *
+                100
                 : uptimePercentage;
 
         return {
@@ -365,6 +365,111 @@ export const POST = async (req: NextRequest) => {
                 status: 500,
                 headers: { "Content-Type": "application/json" },
             },
+        );
+    }
+};
+
+export const PATCH = async (req: NextRequest) => {
+    // Route responsible for updating a route
+    const session = await auth.api.getSession({
+        headers: await headers(),
+    });
+
+    if (!session) {
+        return new Response("Unauthorized", { status: 401 });
+    }
+
+    const { user } = session;
+    const body = await req.json();
+
+    const {
+        id,
+        name,
+        description,
+        method,
+        url,
+        headers: requestHeaders,
+        body: requestBody,
+        expectedStatusCode,
+        responseTimeThreshold,
+        monitoringInterval,
+        retries,
+        alertEmail,
+        isActive,
+        contentType
+    } = body;
+
+    // Validate required fields
+    if (!id || !url || !method) {
+        return new Response(
+            JSON.stringify({ error: "Route ID, URL and Method are required" }),
+            {
+                status: 400,
+                headers: { "Content-Type": "application/json" },
+            }
+        );
+    }
+
+    try {
+        // First check if the route belongs to the user
+        const existingRoute = await prisma.route.findFirst({
+            where: {
+                id,
+                userId: user.id
+            }
+        });
+
+        if (!existingRoute) {
+            return new Response(
+                JSON.stringify({ error: "Route not found or unauthorized" }),
+                {
+                    status: 404,
+                    headers: { "Content-Type": "application/json" },
+                }
+            );
+        }
+
+        // Update the route in the database
+        const updatedRoute = await prisma.route.update({
+            where: {
+                id
+            },
+            data: {
+                method,
+                url,
+                name,
+                description,
+                requestHeaders: requestHeaders
+                    ? JSON.stringify(requestHeaders)
+                    : existingRoute.requestHeaders ?? JSON.stringify({}),
+                requestBody: requestBody
+                    ? JSON.stringify(requestBody)
+                    : existingRoute.requestBody,
+                expectedStatusCode,
+                responseTimeThreshold,
+                monitoringInterval: monitoringInterval ? parseInt(monitoringInterval) : existingRoute.monitoringInterval,
+                retries: retries !== undefined ? parseInt(retries) : existingRoute.retries,
+                alertEmail: alertEmail !== undefined ? alertEmail : existingRoute.alertEmail,
+                isActive: isActive !== undefined ? isActive : existingRoute.isActive
+            },
+        });
+
+        return new Response(JSON.stringify(updatedRoute), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+        });
+    } catch (error: unknown) {
+        const errorMessage =
+            error instanceof Error ? error.message : "Unknown error occurred";
+
+        return new Response(
+            JSON.stringify({
+                error: `Failed to update route: ${errorMessage}`,
+            }),
+            {
+                status: 500,
+                headers: { "Content-Type": "application/json" },
+            }
         );
     }
 };

@@ -21,6 +21,7 @@ import { addToast } from "@heroui/toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { MoreHorizontal } from "lucide-react";
+import { EditRouteButton } from "./edit-route-dialog";
 
 export function StatusBadge({ status }: { status: string }) {
     switch (status) {
@@ -84,15 +85,15 @@ export const RoutesTable = ({ routes }: { routes: RouteWithMetrics[] }) => {
                         </TableCell>
                         <TableCell>
                             {route.responseTime === undefined ||
-                            route.responseTime === null
+                                route.responseTime === null
                                 ? "-"
                                 : `${route.responseTime}ms`}
                         </TableCell>
                         <TableCell>
                             {route.lastChecked
                                 ? formatDistanceToNow(route.lastChecked, {
-                                      addSuffix: true,
-                                  })
+                                    addSuffix: true,
+                                })
                                 : "Never checked"}
                         </TableCell>
                         <TableCell>{route.uptime}</TableCell>
@@ -116,8 +117,8 @@ export const RoutesTable = ({ routes }: { routes: RouteWithMetrics[] }) => {
                                     <DropdownMenuItem>
                                         View Details
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem>
-                                        Edit Route
+                                    <DropdownMenuItem asChild>
+                                        <EditRouteButton route={route} />
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem
