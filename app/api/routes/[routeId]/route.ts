@@ -81,7 +81,6 @@ export const GET = async (
     });
 
     const responseTime = requestLogs.reduce((acc, log) => {
-        // Convert from seconds to milliseconds if the value is small (older records)
         const logResponseTime = log.responseTime || 0;
         return (
             acc +
