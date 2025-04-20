@@ -29,7 +29,7 @@ export default function LoginPage() {
 
     useEffect(() => {
         if (!error && !isPending && data) {
-            router.push("/"); // Redirect to home if authenticated
+            router.push("/dashboard"); // Redirect to home if authenticated
         }
     }, [error, isPending, data, router]);
 
@@ -43,7 +43,7 @@ export default function LoginPage() {
             });
 
             if (response.data && !response.error) {
-                router.push("/"); // Redirect to home after successful login
+                router.push("/dashboard"); // Redirect to home after successful login
                 router.refresh(); // Refresh to update UI with authenticated state
             } else {
                 addToast({
