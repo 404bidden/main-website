@@ -27,7 +27,7 @@ export default function RegisterPage() {
 
     useEffect(() => {
         if (!error && !isPending && data) {
-            router.push("/"); // Redirect to home if authenticated
+            router.push("/dashboard"); // Redirect to home if authenticated
         }
     }, [error, isPending, data, router]);
 
@@ -61,7 +61,7 @@ export default function RegisterPage() {
             });
 
             if (response.data && !response.error) {
-                router.push("/"); // Redirect to home after successful registration
+                router.push("/dashboard"); // Redirect to home after successful registration
                 router.refresh(); // Refresh to update UI with authenticated state
             } else {
                 addToast({
