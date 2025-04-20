@@ -12,17 +12,17 @@ export const auth = betterAuth({
         enabled: true,
         autoSignIn: true,
         minPasswordLength: 10,
-        sendResetPassword: async ({ user, url, token }, request) => { 
+        sendResetPassword: async ({ user, url, token }, request) => {
             await resend.emails.send({
-                from: 'support@404bidden.tpne.news',
+                from: "support@404bidden.tpne.news",
                 to: user.email,
-                subject: 'Reset your password',
+                subject: "Reset your password",
                 react: ResetPasswordEmail({
                     resetLink: url,
                     userFirstName: user.name.split(" ")[0],
                 }),
             });
-        }
+        },
     },
     database: prismaAdapter(prisma, {
         provider: "postgresql",

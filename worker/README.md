@@ -18,10 +18,10 @@ A Rust-based worker that monitors API endpoints and tracks their status and perf
 
 1. Ensure you have Rust and Cargo installed
 2. Build the worker:
-   ```
-   cd worker
-   cargo build --release
-   ```
+    ```
+    cd worker
+    cargo build --release
+    ```
 
 ## Running the Worker
 
@@ -39,4 +39,4 @@ The worker expects the database to have the following schema:
 - `Route` table: Contains endpoints to monitor
 - `RequestLog` table: Stores monitoring results
 
-(See your Prisma schema for detailed structure) 
+(See your Prisma schema for detailed structure)

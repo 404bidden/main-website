@@ -65,7 +65,7 @@ export const GET = async (req: NextRequest) => {
                 // Check recent uptime trend (last 5 logs if available)
                 const recentLogs = logs.slice(0, 5);
                 const recentFailures = recentLogs.filter(
-                    (log) => !log.isSuccess
+                    (log) => !log.isSuccess,
                 ).length;
                 const hasRecentIssues = recentFailures > 0;
 
@@ -90,15 +90,15 @@ export const GET = async (req: NextRequest) => {
         const avgResponseTime =
             totalRequests > 0
                 ? logs.reduce((sum, log) => {
-                    // Convert from seconds to milliseconds if the value is small (older records)
-                    const responseTime = log.responseTime || 0;
-                    return (
-                        sum +
-                        (responseTime < 10
-                            ? responseTime * 1000
-                            : responseTime)
-                    );
-                }, 0) / totalRequests
+                      // Convert from seconds to milliseconds if the value is small (older records)
+                      const responseTime = log.responseTime || 0;
+                      return (
+                          sum +
+                          (responseTime < 10
+                              ? responseTime * 1000
+                              : responseTime)
+                      );
+                  }, 0) / totalRequests
                 : 0;
 
         // Calculate recent metrics (last 24h if available)
@@ -110,8 +110,8 @@ export const GET = async (req: NextRequest) => {
         const recentUptime =
             recentLogs.length > 0
                 ? (recentLogs.filter((log) => log.isSuccess).length /
-                    recentLogs.length) *
-                100
+                      recentLogs.length) *
+                  100
                 : uptimePercentage;
 
         return {

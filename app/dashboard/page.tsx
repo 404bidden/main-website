@@ -30,8 +30,6 @@ import { Chip } from "@heroui/chip";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 
-// Helper function to render status badge
-
 export default function Dashboard() {
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const { error, data, isPending } = authClient.useSession();
@@ -162,9 +160,13 @@ export default function Dashboard() {
                                                     <DropdownMenuLabel>
                                                         Actions
                                                     </DropdownMenuLabel>
-                                                    <DropdownMenuItem onClick={() => {
-                                                        router.push(`/dashboard/routes/${route.id}`);
-                                                    }}>
+                                                    <DropdownMenuItem
+                                                        onClick={() => {
+                                                            router.push(
+                                                                `/dashboard/routes/${route.id}`,
+                                                            );
+                                                        }}
+                                                    >
                                                         View Details
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem>
@@ -236,8 +238,11 @@ export default function Dashboard() {
                                             size="sm"
                                             className="w-full"
                                             onClick={() => {
-                                                router.push(`/dashboard/routes/${route.id}`);
-                                            }}                                        >
+                                                router.push(
+                                                    `/dashboard/routes/${route.id}`,
+                                                );
+                                            }}
+                                        >
                                             View Details
                                         </Button>
                                     </CardFooter>

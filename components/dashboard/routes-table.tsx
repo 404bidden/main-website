@@ -156,34 +156,37 @@ export const RoutesTable = ({ routes }: { routes: RouteWithMetrics[] }) => {
                                         Pause Monitoring
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuItem className="text-red-600" onClick={async () => {
-                                        const response = await fetch(
-                                            `/api/routes/${route.id}`,
-                                            {
-                                                method: "DELETE",
-                                            },
-                                        );
-                                        if (response.ok) {
-                                            addToast({
-                                                title: "Route deleted successfully!",
-                                                description:
-                                                    "The route has been deleted.",
-                                                color: "success",
-                                                variant: "flat",
-                                            });
-                                            queryClient.invalidateQueries({
-                                                queryKey: ["routes"],
-                                            });
-                                        } else {
-                                            addToast({
-                                                title: "Error deleting route",
-                                                description:
-                                                    "There was an error deleting the route.",
-                                                color: "danger",
-                                                variant: "flat",
-                                            });
-                                        }
-                                    }}>
+                                    <DropdownMenuItem
+                                        className="text-red-600"
+                                        onClick={async () => {
+                                            const response = await fetch(
+                                                `/api/routes/${route.id}`,
+                                                {
+                                                    method: "DELETE",
+                                                },
+                                            );
+                                            if (response.ok) {
+                                                addToast({
+                                                    title: "Route deleted successfully!",
+                                                    description:
+                                                        "The route has been deleted.",
+                                                    color: "success",
+                                                    variant: "flat",
+                                                });
+                                                queryClient.invalidateQueries({
+                                                    queryKey: ["routes"],
+                                                });
+                                            } else {
+                                                addToast({
+                                                    title: "Error deleting route",
+                                                    description:
+                                                        "There was an error deleting the route.",
+                                                    color: "danger",
+                                                    variant: "flat",
+                                                });
+                                            }
+                                        }}
+                                    >
                                         Delete Route
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>

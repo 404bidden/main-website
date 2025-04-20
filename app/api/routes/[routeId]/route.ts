@@ -29,7 +29,7 @@ export const DELETE = async (
         where: {
             routeId: routeId,
         },
-    })
+    });
     const result = await prisma.route.delete({
         where: {
             id: routeId,

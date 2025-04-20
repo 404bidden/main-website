@@ -80,14 +80,17 @@ export default function ResetPasswordPage() {
                 setIsSuccess(true);
                 addToast({
                     title: "Password reset successful",
-                    description: "Your password has been updated. You can now log in with your new password.",
+                    description:
+                        "Your password has been updated. You can now log in with your new password.",
                     variant: "flat",
                     color: "success",
                 });
             } else {
                 addToast({
                     title: "Failed to reset password",
-                    description: response.error?.message || "There was an error resetting your password. Please try again or request a new reset link.",
+                    description:
+                        response.error?.message ||
+                        "There was an error resetting your password. Please try again or request a new reset link.",
                     variant: "flat",
                     color: "danger",
                 });
@@ -96,7 +99,8 @@ export default function ResetPasswordPage() {
             console.error("Password reset error:", err);
             addToast({
                 title: "An unexpected error occurred",
-                description: "There was a problem resetting your password. Please try again or request a new reset link.",
+                description:
+                    "There was a problem resetting your password. Please try again or request a new reset link.",
                 variant: "flat",
                 color: "danger",
             });
@@ -168,7 +172,9 @@ export default function ResetPasswordPage() {
                                 className="w-full"
                                 disabled={isSubmitting || !token}
                             >
-                                {isSubmitting ? "Resetting..." : "Reset Password"}
+                                {isSubmitting
+                                    ? "Resetting..."
+                                    : "Reset Password"}
                             </Button>
                             <div className="text-center text-sm">
                                 Remember your password?{" "}

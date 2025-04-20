@@ -9,7 +9,14 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 import { authClient } from "@/lib/auth-client";
 import { Form } from "@heroui/form";
 import { Input } from "@heroui/input";
@@ -86,14 +93,16 @@ export default function LoginPage() {
             if (!response.error) {
                 addToast({
                     title: "Password reset email sent",
-                    description: "Please check your email for instructions to reset your password",
+                    description:
+                        "Please check your email for instructions to reset your password",
                     variant: "flat",
                     color: "success",
                 });
                 setForgotPasswordOpen(false);
             } else {
                 addToast({
-                    title: response.error?.message || "Failed to send reset email",
+                    title:
+                        response.error?.message || "Failed to send reset email",
                     variant: "flat",
                     color: "danger",
                 });
@@ -175,12 +184,16 @@ export default function LoginPage() {
             </Card>
 
             {/* Forgot Password Dialog */}
-            <Dialog open={forgotPasswordOpen} onOpenChange={setForgotPasswordOpen}>
+            <Dialog
+                open={forgotPasswordOpen}
+                onOpenChange={setForgotPasswordOpen}
+            >
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle>Reset your password</DialogTitle>
                         <DialogDescription>
-                            Enter your email address and we'll send you a link to reset your password.
+                            Enter your email address and we'll send you a link
+                            to reset your password.
                         </DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handlePasswordReset} className="space-y-4">
@@ -202,10 +215,7 @@ export default function LoginPage() {
                             >
                                 Cancel
                             </Button>
-                            <Button
-                                type="submit"
-                                disabled={isResetting}
-                            >
+                            <Button type="submit" disabled={isResetting}>
                                 {isResetting ? "Sending..." : "Send Reset Link"}
                             </Button>
                         </DialogFooter>
