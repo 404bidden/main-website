@@ -39,7 +39,7 @@ import { authClient } from "@/lib/auth-client";
 import { Checkbox } from "@heroui/checkbox";
 import { Chip } from "@heroui/chip";
 import { Input } from "@heroui/input";
-import { StatsGrid } from "@/components/dashboard/StatsGrid";
+// import { StatsGrid } from "@/components/dashboard/StatsGrid";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -586,7 +586,7 @@ function RouteDetailsContent() {
                                             </ChartContainer>
                                         </div>
                                     </Card>
-                                    <StatsGrid />
+                                    {/* <StatsGrid /> */}
                                     <Card className="p-6 hover:shadow-md transition-shadow">
                                         <CardHeader>
                                             <CardTitle>
