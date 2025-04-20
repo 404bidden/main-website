@@ -295,12 +295,9 @@ export const CreateRouteDialog = ({
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
             <div className="absolute top-4 right-4">
                 <DialogTrigger asChild>
-                    <Button className="relative group">
-                        <span className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 opacity-50 blur-md group-hover:opacity-75 transition-opacity"></span>
-                        <span className="relative z-10 flex items-center">
-                            <Plus className="mr-2 h-4 w-4" />
-                            Add New Route
-                        </span>
+                    <Button variant="shadow" color="primary" className="relative group">
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add New Route
                     </Button>
                 </DialogTrigger>
             </div>
