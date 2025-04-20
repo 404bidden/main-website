@@ -1,7 +1,7 @@
 "use client";
 
 import { Edit } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { cloneElement, useCallback, useEffect, useMemo, useState } from "react";
 
 import {
     Dialog,
@@ -17,7 +17,8 @@ import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
 import { NumberInput } from "@heroui/number-input";
 import { addToast } from "@heroui/toast";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { DropdownMenuItem } from "../ui/dropdown-menu";
 import { Label } from "../ui/label";
 import { ScrollArea } from "../ui/scroll-area";
 import {
@@ -69,78 +70,81 @@ export const EditRouteDialog = ({
         {},
     );
 
-    // Load route details when dialog opens
+    // Fetch route details using React Query
+    const { data: routeDetailsQuery, isLoading } = useQuery({
+        queryKey: ['route', route.id],
+        queryFn: async () => {
+            const response = await fetch(`/api/routes/${route.id}`);
+            if (!response.ok) {
+                throw new Error('Failed to fetch route details');
+            }
+            return response.json();
+        },
+        enabled: isOpen && !!route?.id,
+    });
+
+    // Set form data when route details are fetched
     useEffect(() => {
-        const fetchRouteDetails = async () => {
-            setLoading(true);
+        if (routeDetailsQuery && !formData) {
             try {
-                const response = await fetch(`/api/routes/${route.id}`);
-                if (!response.ok) {
-                    throw new Error('Failed to fetch route details');
-                }
-
-                const routeDetails = await response.json();
-
                 // Parse JSON strings from the API response
                 let requestHeaders = "{}";
                 let requestBody = "";
 
                 try {
-                    if (routeDetails.requestHeaders) {
+                    if (routeDetailsQuery.requestHeaders) {
                         // Store as string for editing
-                        requestHeaders = routeDetails.requestHeaders;
+                        requestHeaders = routeDetailsQuery.requestHeaders;
                     }
                 } catch (e) {
                     console.error("Error parsing request headers:", e);
                 }
 
                 try {
-                    if (routeDetails.requestBody) {
+                    if (routeDetailsQuery.requestBody) {
                         // Store as string for editing
-                        requestBody = routeDetails.requestBody;
+                        requestBody = routeDetailsQuery.requestBody;
                     }
                 } catch (e) {
                     console.error("Error parsing request body:", e);
                 }
 
                 setFormData({
-                    id: routeDetails.id,
-                    name: routeDetails.name || "",
-                    description: routeDetails.description || "",
-                    url: routeDetails.url || "",
-                    method: routeDetails.method || "GET",
+                    id: routeDetailsQuery.id,
+                    name: routeDetailsQuery.name || "",
+                    description: routeDetailsQuery.description || "",
+                    url: routeDetailsQuery.url || "",
+                    method: routeDetailsQuery.method || "GET",
                     requestHeaders: requestHeaders,
                     requestBody: requestBody,
                     contentType: "application/json", // Default, could be stored in the DB
-                    expectedStatusCode: routeDetails.expectedStatusCode || 200,
-                    responseTimeThreshold: routeDetails.responseTimeThreshold || 500,
-                    monitoringInterval: routeDetails.monitoringInterval?.toString() || "300",
-                    retries: routeDetails.retries || 3,
-                    alertEmail: routeDetails.alertEmail || "",
-                    isActive: routeDetails.isActive !== undefined ? routeDetails.isActive : true,
+                    expectedStatusCode: routeDetailsQuery.expectedStatusCode || 200,
+                    responseTimeThreshold: routeDetailsQuery.responseTimeThreshold || 500,
+                    monitoringInterval: routeDetailsQuery.monitoringInterval?.toString() || "300",
+                    retries: routeDetailsQuery.retries || 3,
+                    alertEmail: routeDetailsQuery.alertEmail || "",
+                    isActive: routeDetailsQuery.isActive !== undefined ? routeDetailsQuery.isActive : true,
                 });
             } catch (error) {
-                console.error("Failed to fetch route details:", error);
+                console.error("Failed to parse route details:", error);
                 addToast({
                     title: "Error",
                     description: "Failed to load route details.",
                     color: "danger",
                     variant: "flat",
                 });
-
-                // Close dialog on error
-                onOpenChange(false);
-            } finally {
-                setLoading(false);
             }
-        };
-
-        if (isOpen && route?.id) {
-            fetchRouteDetails();
         }
-    }, [isOpen, route?.id, onOpenChange]);
+    }, [routeDetailsQuery, formData]);
 
-    // Validation functions
+    // Reset form data when dialog closes
+    useEffect(() => {
+        if (!isOpen) {
+            setFormData(null);
+            setTouchedFields({});
+        }
+    }, [isOpen]);
+
     const isValidUrl = (urlString: string): boolean => {
         try {
             if (!urlString.trim()) return false;
@@ -337,7 +341,7 @@ export const EditRouteDialog = ({
     }, [formData, isFormValid, isValidRequestHeaders, isValidRequestBody, isValidUrl, onOpenChange, queryClient]);
 
     // Don't render anything if formData is not loaded yet
-    if (!formData && isOpen) {
+    if ((isLoading || !formData) && isOpen) {
         return (
             <Dialog open={isOpen} onOpenChange={onOpenChange}>
                 <DialogContent className="sm:max-w-[600px]">
@@ -875,19 +879,44 @@ export const EditRouteDialog = ({
 };
 
 // Simple button component to trigger the edit dialog
-export const EditRouteButton = ({ route }: { route: RouteWithMetrics }) => {
+export const EditRouteButton = ({
+    route,
+    children
+}: {
+    route: RouteWithMetrics;
+    children?: React.ReactNode;
+}) => {
     const [isOpen, setIsOpen] = useState(false);
+
+    // Prevent event propagation to avoid dropdown menu closing affecting the dialog
+    const handleClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsOpen(true);
+    };
+
+    // Default trigger element is a DropdownMenuItem with stopPropagation
+    const DefaultTrigger = (
+        <DropdownMenuItem onSelect={(e) => {
+            // Prevent the dropdown from closing the dialog
+            e.preventDefault();
+            setIsOpen(true);
+        }}>
+            <Edit className="h-4 w-4 mr-2" />
+            Edit Route
+        </DropdownMenuItem>
+    );
+
+    // If children are provided, clone them with the onClick handler with stopPropagation
+    const triggerElement = children
+        ? cloneElement(children as React.ReactElement, {
+            onClick: handleClick
+        })
+        : DefaultTrigger;
 
     return (
         <>
-            <Button
-                variant="ghost"
-                size="sm"
-                onPress={() => setIsOpen(true)}
-            >
-                <Edit className="h-4 w-4 mr-2" />
-                Edit Route
-            </Button>
+            {triggerElement}
 
             <EditRouteDialog
                 isOpen={isOpen}

@@ -20,7 +20,8 @@ import { Chip } from "@heroui/chip";
 import { addToast } from "@heroui/toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
-import { MoreHorizontal } from "lucide-react";
+import { FileText, LucidePauseCircle, MoreHorizontal, PauseCircle, RefreshCw, Trash2Icon } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { EditRouteButton } from "./edit-route-dialog";
 
 export function StatusBadge({ status }: { status: string }) {
@@ -52,6 +53,7 @@ export function StatusBadge({ status }: { status: string }) {
 }
 export const RoutesTable = ({ routes }: { routes: RouteWithMetrics[] }) => {
     const queryClient = useQueryClient();
+    const router = useRouter()
     return (
         <Table>
             <TableHeader>
@@ -114,12 +116,13 @@ export const RoutesTable = ({ routes }: { routes: RouteWithMetrics[] }) => {
                                     <DropdownMenuLabel>
                                         Actions
                                     </DropdownMenuLabel>
-                                    <DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => {
+                                        router.push(`/dashboard/routes/${route.id}`);
+                                    }}>
+                                        <FileText className="mr-2 h-4 w-4" />
                                         View Details
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem asChild>
-                                        <EditRouteButton route={route} />
-                                    </DropdownMenuItem>
+                                    <EditRouteButton route={route} />
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem
                                         onClick={async () => {
@@ -151,9 +154,11 @@ export const RoutesTable = ({ routes }: { routes: RouteWithMetrics[] }) => {
                                             }
                                         }}
                                     >
+                                        <RefreshCw className="mr-2 h-4 w-4" />
                                         Check Now
                                     </DropdownMenuItem>
                                     <DropdownMenuItem>
+                                        <PauseCircle className="mr-2 h-4 w-4" />
                                         Pause Monitoring
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator />
@@ -188,6 +193,7 @@ export const RoutesTable = ({ routes }: { routes: RouteWithMetrics[] }) => {
                                             }
                                         }}
                                     >
+                                        <Trash2Icon className="mr-2 h-4 w-4" />
                                         Delete Route
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
