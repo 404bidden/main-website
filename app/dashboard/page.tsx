@@ -1,8 +1,9 @@
 "use client";
-import { MoreHorizontal, Plus, Server } from "lucide-react";
+import { FileText, MoreHorizontal, PauseCircle, Plus, RefreshCw, Server, Trash2Icon } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { CreateRouteDialog } from "@/components/dashboard/create-route-dialog";
+import { EditRouteButton } from "@/components/dashboard/edit-route-dialog";
 import { RoutesTable, StatusBadge } from "@/components/dashboard/routes-table";
 import { SkeletonRouteCard } from "@/components/dashboard/skeleton-route-card";
 import { TableSkeleton } from "@/components/dashboard/skeleton-table";
@@ -27,7 +28,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { authClient } from "@/lib/auth-client";
 import { RouteWithMetrics } from "@/types";
 import { Chip } from "@heroui/chip";
-import { useQuery } from "@tanstack/react-query";
+import { addToast } from "@heroui/toast";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 
 export default function Dashboard() {
@@ -66,6 +68,7 @@ export default function Dashboard() {
             router.push("/auth/login"); // Redirect to login if not authenticated
         }
     }, [error, isPending, data, router]);
+    const queryClient = useQueryClient()
 
     return (
         <div className="container flex items-center justify-center max-w-[95%] flex-col mx-auto py-6">
@@ -77,10 +80,10 @@ export default function Dashboard() {
                 />
             </div>
 
-            <Tabs defaultValue="table" className="w-full">
+            <Tabs defaultValue="cards" className="w-full">
                 <TabsList className="mb-4">
-                    <TabsTrigger value="table">Table View</TabsTrigger>
                     <TabsTrigger value="cards">Card View</TabsTrigger>
+                    <TabsTrigger value="table">Table View</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="table" className="space-y-4">
@@ -90,7 +93,7 @@ export default function Dashboard() {
                                 {isLoading || isRoutesPending ? (
                                     <TableSkeleton rowCount={5} />
                                 ) : (routes?.length === 0 || !routes) &&
-                                  !isLoading ? (
+                                    !isLoading ? (
                                     <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
                                         <Server className="h-12 w-12 text-slate-200 mb-4" />
                                         <h3 className="text-lg font-medium  mb-1">
@@ -160,27 +163,84 @@ export default function Dashboard() {
                                                     <DropdownMenuLabel>
                                                         Actions
                                                     </DropdownMenuLabel>
-                                                    <DropdownMenuItem
-                                                        onClick={() => {
-                                                            router.push(
-                                                                `/dashboard/routes/${route.id}`,
-                                                            );
-                                                        }}
-                                                    >
+                                                    <DropdownMenuItem onClick={() => {
+                                                        router.push(`/dashboard/routes/${route.id}`);
+                                                    }}>
+                                                        <FileText className="mr-2 h-4 w-4" />
                                                         View Details
                                                     </DropdownMenuItem>
-                                                    <DropdownMenuItem>
-                                                        Edit Route
-                                                    </DropdownMenuItem>
+                                                    <EditRouteButton route={route} />
                                                     <DropdownMenuSeparator />
-                                                    <DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        onClick={async () => {
+                                                            const response = await fetch(
+                                                                `/api/routes/${route.id}/run`,
+                                                                {
+                                                                    method: "POST",
+                                                                },
+                                                            );
+                                                            if (response.ok) {
+                                                                addToast({
+                                                                    title: "Route checked successfully!",
+                                                                    description:
+                                                                        "The route has been checked.",
+                                                                    color: "success",
+                                                                    variant: "flat",
+                                                                });
+                                                                queryClient.invalidateQueries({
+                                                                    queryKey: ["routes"],
+                                                                });
+                                                            } else {
+                                                                addToast({
+                                                                    title: "Error checking route",
+                                                                    description:
+                                                                        "There was an error checking the route.",
+                                                                    color: "danger",
+                                                                    variant: "flat",
+                                                                });
+                                                            }
+                                                        }}
+                                                    >
+                                                        <RefreshCw className="mr-2 h-4 w-4" />
                                                         Check Now
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem>
+                                                        <PauseCircle className="mr-2 h-4 w-4" />
                                                         Pause Monitoring
                                                     </DropdownMenuItem>
                                                     <DropdownMenuSeparator />
-                                                    <DropdownMenuItem className="text-red-600">
+                                                    <DropdownMenuItem
+                                                        className="text-red-600"
+                                                        onClick={async () => {
+                                                            const response = await fetch(
+                                                                `/api/routes/${route.id}`,
+                                                                {
+                                                                    method: "DELETE",
+                                                                },
+                                                            );
+                                                            if (response.ok) {
+                                                                addToast({
+                                                                    title: "Route deleted successfully!",
+                                                                    description:
+                                                                        "The route has been deleted.",
+                                                                    color: "success",
+                                                                    variant: "flat",
+                                                                });
+                                                                queryClient.invalidateQueries({
+                                                                    queryKey: ["routes"],
+                                                                });
+                                                            } else {
+                                                                addToast({
+                                                                    title: "Error deleting route",
+                                                                    description:
+                                                                        "There was an error deleting the route.",
+                                                                    color: "danger",
+                                                                    variant: "flat",
+                                                                });
+                                                            }
+                                                        }}
+                                                    >
+                                                        <Trash2Icon className="mr-2 h-4 w-4" />
                                                         Delete Route
                                                     </DropdownMenuItem>
                                                 </DropdownMenuContent>
@@ -207,7 +267,7 @@ export default function Dashboard() {
                                                 <p className="font-medium">
                                                     {route.responseTime ===
                                                         undefined ||
-                                                    route.responseTime === null
+                                                        route.responseTime === null
                                                         ? "-"
                                                         : `${route.responseTime}ms`}
                                                 </p>
