@@ -162,7 +162,9 @@ export default function Dashboard() {
                                                     <DropdownMenuLabel>
                                                         Actions
                                                     </DropdownMenuLabel>
-                                                    <DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => {
+                                                        router.push(`/dashboard/routes/${route.id}`);
+                                                    }}>
                                                         View Details
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem>
@@ -233,7 +235,9 @@ export default function Dashboard() {
                                             variant="outline"
                                             size="sm"
                                             className="w-full"
-                                        >
+                                            onClick={() => {
+                                                router.push(`/dashboard/routes/${route.id}`);
+                                            }}                                        >
                                             View Details
                                         </Button>
                                     </CardFooter>
