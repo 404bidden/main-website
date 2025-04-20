@@ -43,27 +43,6 @@ import { Input } from "@heroui/input";
 // Create a client
 const queryClient = new QueryClient();
 
-// Mock data for charts (in a real app, you'd fetch this from an API)
-const generateMockTimeData = (days = 30) => {
-    const data = [];
-    const today = new Date();
-    for (let i = days; i > 0; i--) {
-        const date = new Date(today);
-        date.setDate(today.getDate() - i);
-        data.push({
-            date: date.toISOString().split("T")[0],
-            requests: Math.floor(Math.random() * 100) + 10,
-            responseTime: Math.floor(Math.random() * 500) + 50,
-            successRate: Math.min(
-                100,
-                Math.max(70, 100 - Math.floor(Math.random() * 30)),
-            ),
-        });
-    }
-    return data;
-};
-
-// Function to prepare response time data from logs
 interface LogEntry {
     id: string;
     statusCode: number;
@@ -101,51 +80,6 @@ function RouteDetailsContent() {
     const { data: session, error, isPending } = authClient.useSession();
     const [tab, setTab] = useState("overview");
 
-    // Sample logs data for testing the response time chart
-    const sampleLogsData = [
-        {
-            id: "0940f8e5-906a-4819-9b86-86ce740a471d",
-            statusCode: 200,
-            responseTime: 0,
-            isSuccess: true,
-            createdAt: "2025-04-17T11:23:08.913Z",
-            routeId: "0c027ff9-d211-4b76-9555-ef8666848ed0",
-        },
-        {
-            id: "b027b3c2-ed45-409d-9bf9-4cb75c2b0ca3",
-            statusCode: 200,
-            responseTime: 0,
-            isSuccess: true,
-            createdAt: "2025-04-17T11:23:17.706Z",
-            routeId: "0c027ff9-d211-4b76-9555-ef8666848ed0",
-        },
-        {
-            id: "fd40a994-861d-431e-8111-087a665415e2",
-            statusCode: 200,
-            responseTime: 0,
-            isSuccess: true,
-            createdAt: "2025-04-17T11:29:31.411Z",
-            routeId: "0c027ff9-d211-4b76-9555-ef8666848ed0",
-        },
-        {
-            id: "8046f8dc-1a2c-4455-9afb-8f9a6931bd22",
-            statusCode: 200,
-            responseTime: 269,
-            isSuccess: true,
-            createdAt: "2025-04-17T12:04:55.205Z",
-            routeId: "0c027ff9-d211-4b76-9555-ef8666848ed0",
-        },
-        {
-            id: "02795a1d-48da-4eb1-bd4c-7641ec420dfe",
-            statusCode: 200,
-            responseTime: 177,
-            isSuccess: true,
-            createdAt: "2025-04-17T12:14:04.348Z",
-            routeId: "0c027ff9-d211-4b76-9555-ef8666848ed0",
-        },
-    ];
-
-    // Fetch route details
     const {
         data: routeDetails,
         isLoading,
@@ -163,13 +97,10 @@ function RouteDetailsContent() {
         enabled: !!session && !!routeId,
     });
 
-    // Prepare logs data for the response time chart
     const responseTimeData = prepareResponseTimeData(
-        routeDetails?.logs || sampleLogsData,
+        routeDetails?.logs,
     );
-    const timeData = generateMockTimeData();
 
-    // Delete route mutation
     const deleteMutation = useMutation({
         mutationFn: async () => {
             const response = await fetch(`/api/routes/${routeId}`, {
