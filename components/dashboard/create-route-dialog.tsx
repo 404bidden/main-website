@@ -293,12 +293,17 @@ export const CreateRouteDialog = ({
     // Render component
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
-            <DialogTrigger asChild>
-                <Button>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add New Route
-                </Button>
-            </DialogTrigger>
+            <div className="absolute top-4 right-4">
+                <DialogTrigger asChild>
+                    <Button className="relative group">
+                        <span className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 opacity-50 blur-md group-hover:opacity-75 transition-opacity"></span>
+                        <span className="relative z-10 flex items-center">
+                            <Plus className="mr-2 h-4 w-4" />
+                            Add New Route
+                        </span>
+                    </Button>
+                </DialogTrigger>
+            </div>
             <DialogContent className="sm:max-w-[600px]">
                 <DialogHeader>
                     <DialogTitle>Add New Route</DialogTitle>
@@ -392,9 +397,9 @@ export const CreateRouteDialog = ({
                                                     }
                                                     color={
                                                         touchedFields.url &&
-                                                        !isValidUrl(
-                                                            formData.url,
-                                                        )
+                                                            !isValidUrl(
+                                                                formData.url,
+                                                            )
                                                             ? "danger"
                                                             : undefined
                                                     }
@@ -528,7 +533,7 @@ export const CreateRouteDialog = ({
                                                     }
                                                     color={
                                                         touchedFields.requestHeaders &&
-                                                        !isValidRequestHeaders
+                                                            !isValidRequestHeaders
                                                             ? "danger"
                                                             : undefined
                                                     }
@@ -555,7 +560,7 @@ export const CreateRouteDialog = ({
                                                     id="requestBody"
                                                     placeholder={
                                                         formData.contentType ===
-                                                        "application/json"
+                                                            "application/json"
                                                             ? '{"username": "test", "password": "test"}'
                                                             : "username=test&password=test"
                                                     }
@@ -575,11 +580,11 @@ export const CreateRouteDialog = ({
                                                         (formData.method ===
                                                             "GET" &&
                                                             formData.requestBody.trim() !==
-                                                                "") ||
+                                                            "") ||
                                                         (formData.contentType ===
                                                             "application/json" &&
                                                             formData.requestBody.trim() !==
-                                                                "" &&
+                                                            "" &&
                                                             !isValidJson(
                                                                 formData.requestBody,
                                                             ))
@@ -588,21 +593,21 @@ export const CreateRouteDialog = ({
                                                         (formData.method ===
                                                             "GET" &&
                                                             formData.requestBody.trim() !==
-                                                                "") ||
-                                                        (formData.contentType ===
-                                                            "application/json" &&
-                                                            formData.requestBody.trim() !==
+                                                            "") ||
+                                                            (formData.contentType ===
+                                                                "application/json" &&
+                                                                formData.requestBody.trim() !==
                                                                 "" &&
-                                                            !isValidJson(
-                                                                formData.requestBody,
-                                                            ))
+                                                                !isValidJson(
+                                                                    formData.requestBody,
+                                                                ))
                                                             ? "danger"
                                                             : undefined
                                                     }
                                                 />
                                                 {formData.method === "GET" &&
                                                     formData.requestBody.trim() !==
-                                                        "" && (
+                                                    "" && (
                                                         <p className="text-danger text-xs">
                                                             GET requests cannot
                                                             have a request body
@@ -616,9 +621,9 @@ export const CreateRouteDialog = ({
                                                 )}
                                                 {formData.method !== "GET" &&
                                                     formData.contentType ===
-                                                        "application/json" &&
+                                                    "application/json" &&
                                                     formData.requestBody.trim() !==
-                                                        "" &&
+                                                    "" &&
                                                     !isValidJson(
                                                         formData.requestBody,
                                                     ) && (
@@ -629,7 +634,7 @@ export const CreateRouteDialog = ({
                                                     )}
                                                 {formData.method !== "GET" &&
                                                     formData.contentType ===
-                                                        "multipart/form-data" && (
+                                                    "multipart/form-data" && (
                                                         <p className="text-default-400 text-xs">
                                                             For form data, you
                                                             can enter key-value
@@ -639,7 +644,7 @@ export const CreateRouteDialog = ({
                                                     )}
                                                 {formData.method !== "GET" &&
                                                     formData.contentType ===
-                                                        "application/x-www-form-urlencoded" && (
+                                                    "application/x-www-form-urlencoded" && (
                                                         <p className="text-default-400 text-xs">
                                                             For URL encoded
                                                             data, use format:

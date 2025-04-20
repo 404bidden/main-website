@@ -204,9 +204,43 @@ export default function Dashboard() {
                                                         <RefreshCw className="mr-2 h-4 w-4" />
                                                         Check Now
                                                     </DropdownMenuItem>
-                                                    <DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        onClick={async () => {
+                                                            const response = await fetch(
+                                                                `/api/routes/${route.id}`,
+                                                                {
+                                                                    method: "PATCH",
+                                                                    headers: {
+                                                                        "Content-Type": "application/json",
+                                                                    },
+                                                                    body: JSON.stringify({
+                                                                        isActive: !route.isActive,
+                                                                    }),
+                                                                },
+                                                            );
+                                                            if (response.ok) {
+                                                                addToast({
+                                                                    title: `Route ${route.isActive ? "paused" : "resumed"} successfully!`,
+                                                                    description: `The route has been ${route.isActive ? "paused" : "resumed"}.`,
+                                                                    color: "success",
+                                                                    variant: "flat",
+                                                                });
+                                                                queryClient.invalidateQueries({
+                                                                    queryKey: ["routes"],
+                                                                });
+                                                            } else {
+                                                                addToast({
+                                                                    title: "Error toggling monitoring",
+                                                                    description:
+                                                                        "There was an error toggling the monitoring status.",
+                                                                    color: "danger",
+                                                                    variant: "flat",
+                                                                });
+                                                            }
+                                                        }}
+                                                    >
                                                         <PauseCircle className="mr-2 h-4 w-4" />
-                                                        Pause Monitoring
+                                                        {route.isActive ? "Pause Monitoring" : "Resume Monitoring"}
                                                     </DropdownMenuItem>
                                                     <DropdownMenuSeparator />
                                                     <DropdownMenuItem
@@ -289,6 +323,20 @@ export default function Dashboard() {
                                                         60}{" "}
                                                     min
                                                 </p>
+                                            </div>
+                                            <div>
+                                                <p className="text-muted-foreground">
+                                                    Monitoring
+                                                </p>
+                                                <div className="flex items-center">
+                                                    <span
+                                                        className={`h-3 w-3 rounded-full mr-2 animate-pulse ${route.isActive ? "bg-green-500" : "bg-red-500"
+                                                            }`}
+                                                    ></span>
+                                                    <p className="font-medium">
+                                                        {route.isActive ? "Active" : "Paused"}
+                                                    </p>
+                                                </div>
                                             </div>
                                         </div>
                                     </CardContent>

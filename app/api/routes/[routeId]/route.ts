@@ -139,3 +139,40 @@ export const PUT = async (
         status: 200,
     });
 };
+
+export const PATCH = async (
+    req: NextRequest,
+    {
+        params,
+    }: {
+        params: Promise<{
+            routeId: string;
+        }>;
+    },
+) => {
+    const { routeId } = await params;
+    if (!routeId) {
+        return new Response("Route ID is required", { status: 400 });
+    }
+    const session = await auth.api.getSession({
+        headers: await headers(),
+    });
+    if (!session) {
+        return new Response("Unauthorized", { status: 401 });
+    }
+
+    const prisma = new PrismaClient();
+    const body = await req.json();
+
+    const result = await prisma.route.update({
+        where: {
+            id: routeId,
+            userId: session.user.id,
+        },
+        data: body,
+    });
+
+    return new Response(JSON.stringify(result), {
+        status: 200,
+    });
+};

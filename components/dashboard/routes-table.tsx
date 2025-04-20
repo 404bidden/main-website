@@ -20,7 +20,7 @@ import { Chip } from "@heroui/chip";
 import { addToast } from "@heroui/toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
-import { FileText, LucidePauseCircle, MoreHorizontal, PauseCircle, RefreshCw, Trash2Icon } from "lucide-react";
+import { FileText, MoreHorizontal, PauseCircle, RefreshCw, Trash2Icon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { EditRouteButton } from "./edit-route-dialog";
 
@@ -65,6 +65,7 @@ export const RoutesTable = ({ routes }: { routes: RouteWithMetrics[] }) => {
                     <TableHead>Response Time</TableHead>
                     <TableHead>Last Checked</TableHead>
                     <TableHead>Uptime</TableHead>
+                    <TableHead>Monitoring</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
             </TableHeader>
@@ -99,6 +100,15 @@ export const RoutesTable = ({ routes }: { routes: RouteWithMetrics[] }) => {
                                 : "Never checked"}
                         </TableCell>
                         <TableCell>{route.uptime}</TableCell>
+                        <TableCell>
+                            <div className="flex items-center">
+                                <span
+                                    className={`h-3 w-3 rounded-full mr-2 animate-pulse ${route.isActive ? "bg-green-500" : "bg-red-500"
+                                        }`}
+                                ></span>
+                                {route.isActive ? "Active" : "Paused"}
+                            </div>
+                        </TableCell>
                         <TableCell className="text-right">
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -157,9 +167,43 @@ export const RoutesTable = ({ routes }: { routes: RouteWithMetrics[] }) => {
                                         <RefreshCw className="mr-2 h-4 w-4" />
                                         Check Now
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        onClick={async () => {
+                                            const response = await fetch(
+                                                `/api/routes/${route.id}`,
+                                                {
+                                                    method: "PATCH",
+                                                    headers: {
+                                                        "Content-Type": "application/json",
+                                                    },
+                                                    body: JSON.stringify({
+                                                        isActive: !route.isActive,
+                                                    }),
+                                                },
+                                            );
+                                            if (response.ok) {
+                                                addToast({
+                                                    title: `Route ${route.isActive ? "paused" : "resumed"} successfully!`,
+                                                    description: `The route has been ${route.isActive ? "paused" : "resumed"}.`,
+                                                    color: "success",
+                                                    variant: "flat",
+                                                });
+                                                queryClient.invalidateQueries({
+                                                    queryKey: ["routes"],
+                                                });
+                                            } else {
+                                                addToast({
+                                                    title: "Error toggling monitoring",
+                                                    description:
+                                                        "There was an error toggling the monitoring status.",
+                                                    color: "danger",
+                                                    variant: "flat",
+                                                });
+                                            }
+                                        }}
+                                    >
                                         <PauseCircle className="mr-2 h-4 w-4" />
-                                        Pause Monitoring
+                                        {route.isActive ? "Pause Monitoring" : "Resume Monitoring"}
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem
